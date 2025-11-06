@@ -2,13 +2,9 @@
   "extends": "../../tsconfig.base.json",
   "files": [],
   "include": [],
-  "types": ["node"],
   "references": [
     {
       "path": "./tsconfig.app.json"
-    },
-    {
-      "path": "./tsconfig.spec.json"
     }
   ]
 }

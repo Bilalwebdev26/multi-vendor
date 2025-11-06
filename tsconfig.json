@@ -1,6 +1,7 @@
 {
   "extends": "./tsconfig.base.json",
   "compileOnSave": false,
+   "types": ["node"],
   "files": [],
   "references": [
     {
@@ -8,6 +9,9 @@
     },
     {
       "path": "./apps/auth-service"
+    },
+    {
+      "path": "./apps/api-gateway"
     }
   ]
 }
