@@ -1,4 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+// import { PrismaClient } from '../../generated/prisma/client'; // path adjust according to file location
+import { PrismaClient } from "../../generated/prisma/client.js";
 import dotenv from "dotenv";
 dotenv.config();
 declare global{
