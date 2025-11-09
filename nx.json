@@ -66,6 +66,7 @@
       }
     }
   ],
+  "useDaemonProcess": false,
   "targetDefaults": {
     "@nx/esbuild:esbuild": {
       "cache": true,
