@@ -22,9 +22,9 @@ export const userRegistration = async (
   res: Response,
   next: NextFunction
 ) => {
+  console.log("req.body.data : ",req.body)
   validateRegisterationData(req.body, "user");
   const { name, email, password, phone_number, country } = req.body;
-  //
   try {
     const existingUser = await prisma.users.findUnique({
       where: { email },
@@ -87,6 +87,7 @@ export const loginUser = async (
   next: NextFunction
 ) => {
   try {
+    console.log("Req.body : ",req)
     const { email, password } = req.body;
     if (!email || !password) {
       return next(new ValidationError("All fields are required"));

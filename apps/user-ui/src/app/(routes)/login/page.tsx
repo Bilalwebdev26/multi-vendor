@@ -1,8 +1,10 @@
 "use client";
+import { useMutation } from "@tanstack/react-query";
 import GoogleButton from "apps/user-ui/src/shared/widgets/Icon/GoogleButton";
+import axios, { AxiosError } from "axios";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
-// import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 type FormData = {
@@ -12,15 +14,37 @@ type FormData = {
 
 const page = () => {
   const [passwordVisible, setPasswordVisible] = useState(false);
- const [serverError, _] = useState<string | null>(null);//SubmitHandler rhf
+  const [serverError, setServerError] = useState<string | null>(null); //SubmitHandler rhf
   const [rememberMe, setRememberMe] = useState(false);
-  // const router = useRouter();
+  const router = useRouter();
+  const loginInMutation = useMutation({
+    mutationFn: async (data: FormData) => {
+      console.log("URI : ", process.env.NEXT_PUBLIC_SERVER_URL);
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_SERVER_URL}/auth/api/v1/login-user`,
+         data,{ withCredentials: true }
+      );
+      console.log("Res : ", response);
+      return response.data;
+    },
+    onSuccess: () => {
+      setServerError(null)
+      router.push("/");
+    },
+    onError:(error:AxiosError)=>{
+     const errorMessage = (error.response?.data as {message?:string})?.message || "Invalid Credentials"
+     setServerError(errorMessage)
+    }
+  });
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<FormData>();
-  const onsubmit = (data: FormData) => console.log(data);
+  const onsubmit = (data: FormData) => {
+    console.log(data);
+    loginInMutation.mutate(data);
+  };
   //setServerError(null)
   return (
     <div className="w-full py-10 min-h-[85vh]  bg-[#f1f1f1]">
@@ -119,10 +143,19 @@ const page = () => {
                 />
                 Remember me
               </label>
-              <Link href={"/forgot-password"} className="text-blue-500 font-semibold text-md">Forgot Password?</Link>
+              <Link
+                href={"/forgot-password"}
+                className="text-blue-500 font-semibold text-md"
+              >
+                Forgot Password?
+              </Link>
             </div>
-            <button type="submit" className="w-full bg-black text-center transition-all duration-200 hover:scale-95 cursor-pointer text-lg text-white py-2 rounded-lg">
-              Login
+            <button
+              type="submit"
+              disabled={loginInMutation.isPending}
+              className="w-full bg-black text-center transition-all duration-200 hover:scale-95 cursor-pointer text-lg text-white py-2 rounded-lg"
+            >
+              {loginInMutation.isPending ? "Log u In ..." : "Login"}
             </button>
             {serverError && (
               <p className="text-red-500 text-sm mt-2">{serverError}</p>

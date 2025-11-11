@@ -12,16 +12,20 @@ export const validateRegisterationData = (
   userType: "user" | "seller"
 ) => {
   const { name, email, password, phone_number, country } = data;
-  if (
-    !name ||
-    !email ||
-    !password ||
-    (userType === "seller" && (phone_number || country))
-  ) {
-    throw new ValidationError(
-      `Missing required fields for ${userType} registration`
-    );
+  if (userType === "seller") {
+    if (!phone_number || !country || !name || !email || !password) {
+      throw new ValidationError(
+        `Missing required fields for ${userType} registration`
+      );
+    }
+  } else {
+    if (!data.name || !data.email || !data.password) {
+      throw new ValidationError(
+        `Missing required fields for ${userType} registration`
+      );
+    }
   }
+
   if (!emailRegex.test(email)) {
     throw new ValidationError("Invalid email address");
   }
@@ -142,7 +146,7 @@ export const handleForgetPassword = async (
 export const verifyForgotPasswordOTP = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   try {
     const { email, otp } = req.body;
@@ -150,7 +154,9 @@ export const verifyForgotPasswordOTP = async (
       throw new ValidationError(`Missing required fields.`);
     }
     await verifyOTP(email, otp, next);
-    res.status(200).json({message:"OTP verified . You can now verify your password."})
+    res
+      .status(200)
+      .json({ message: "OTP verified . You can now verify your password." });
   } catch (error) {
     next(error);
   }
