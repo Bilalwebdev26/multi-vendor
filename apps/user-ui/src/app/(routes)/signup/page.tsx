@@ -92,7 +92,11 @@ const page = () => {
         router.push("/login")
     }
   });
-  const resendOTP = () => {};
+  const resendOTP = () => {
+    if(userData){
+      signUpMutation.mutate(userData)
+    }
+  };
   const {
     register,
     handleSubmit,

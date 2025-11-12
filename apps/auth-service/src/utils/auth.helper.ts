@@ -149,6 +149,7 @@ export const verifyForgotPasswordOTP = async (
   next: NextFunction
 ) => {
   try {
+    console.log("req.body verify-otp : ",req.body)
     const { email, otp } = req.body;
     if (!email || !otp) {
       throw new ValidationError(`Missing required fields.`);

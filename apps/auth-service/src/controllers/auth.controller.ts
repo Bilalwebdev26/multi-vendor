@@ -142,6 +142,7 @@ export const verifyUserForgotPassword = async (
   res: Response,
   next: NextFunction
 ) => {
+  console.log("verifyForgotPasswordOTP ",req)
   await verifyForgotPasswordOTP(req, res, next);
 };
 //reset user password
