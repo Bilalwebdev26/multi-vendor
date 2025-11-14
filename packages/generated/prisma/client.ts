@@ -13,7 +13,7 @@
 import * as process from 'node:process'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
-//globalThis['__dirname'] = path.dirname(fileURLToPath(import.meta.url))
+globalThis['__dirname'] = path.dirname(fileURLToPath(import.meta.url))
 
 import * as runtime from "@prisma/client/runtime/library"
 import * as $Enums from "./enums.js"
@@ -29,8 +29,8 @@ export * from "./enums.js"
  * @example
  * ```
  * const prisma = new PrismaClient()
- * // Fetch zero or more ProfileImages
- * const profileImages = await prisma.profileImages.findMany()
+ * // Fetch zero or more Images
+ * const images = await prisma.images.findMany()
  * ```
  * 
  * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client).
@@ -45,12 +45,27 @@ path.join(__dirname, "query_engine-windows.dll.node")
 path.join(process.cwd(), "packages/generated/prisma/query_engine-windows.dll.node")
 
 /**
- * Model profileImages
+ * Model images
  * 
  */
-export type profileImages = Prisma.profileImagesModel
+export type images = Prisma.imagesModel
 /**
  * Model users
  * 
  */
 export type users = Prisma.usersModel
+/**
+ * Model shopReviews
+ * 
+ */
+export type shopReviews = Prisma.shopReviewsModel
+/**
+ * Model shops
+ * 
+ */
+export type shops = Prisma.shopsModel
+/**
+ * Model sellers
+ * 
+ */
+export type sellers = Prisma.sellersModel

@@ -54,11 +54,13 @@
 "use client";
 import ProfileIcon from "apps/user-ui/src/assets/Profile-icon";
 import { navItems } from "apps/user-ui/src/configs/constants";
+import { useUser } from "apps/user-ui/src/hooks/useUser";
 import { AlignLeft, ChevronDown, HeartIcon, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 
 const HeaderBottom = () => {
+    const { user, isLoading } = useUser();
   const [show, setShow] = useState(false);
   const [sticky, setSticky] = useState(false);
 
@@ -73,7 +75,8 @@ const HeaderBottom = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
+  // const { user } = useUser();
+  // console.log("User : ", user);
   return (
     <div
       className={`w-full transition-all duration-300 ${
@@ -128,20 +131,77 @@ const HeaderBottom = () => {
         </div>
         <div className="">
           {sticky && (
+            // <div className="flex items-center gap-8">
+            //   <div className="flex items-center gap-2">
+            //     <Link
+            //       href={"/login"}
+            //       className="border-2 w-[50px] h-[50px] flex items-center justify-center rounded-full border-[#010f1c1a]"
+            //     >
+            //       <div style={{ color: "black" }}>
+            //         <ProfileIcon width={32} height={32} />
+            //       </div>
+            //     </Link>
+            //     <Link href={"/login"}>
+            //       <span className="block font-medium">Bilal</span>
+            //       <span className="block font-semibold">Sign In</span>
+            //     </Link>
+            //   </div>
+            //   <div className="flex items-center gap-5">
+            //     <Link href={"/wishlist"} className="relative">
+            //       <HeartIcon />
+            //       <div className="w-5 h-5 border-none  bg-red-500 rounded-full flex items-center justify-center absolute top-[-4px] right-[-12px]">
+            //         <span className="text-white font-semibold text-[12px] leading-none">
+            //           0
+            //         </span>
+            //       </div>
+            //     </Link>
+            //     <Link href={"/cart"} className="relative">
+            //       <ShoppingCart />
+            //       <div className="w-5 h-5 border-none  bg-red-500 rounded-full flex items-center justify-center absolute top-[-4px] right-[-10px]">
+            //         <span className="text-white font-semibold text-[12px] leading-none">
+            //           0
+            //         </span>
+            //       </div>
+            //     </Link>
+            //   </div>
+            // </div>
             <div className="flex items-center gap-8">
               <div className="flex items-center gap-2">
-                <Link
-                  href={"/login"}
-                  className="border-2 w-[50px] h-[50px] flex items-center justify-center rounded-full border-[#010f1c1a]"
-                >
-                  <div style={{ color: "black" }}>
-                    <ProfileIcon width={32} height={32} />
-                  </div>
-                </Link>
-                <Link href={"/login"}>
-                  <span className="block font-medium">Bilal</span>
-                  <span className="block font-semibold">Sign In</span>
-                </Link>
+                {!isLoading && user ? (
+                  <>
+                    <Link
+                      href={"/profile"}
+                      className="border-2 w-[50px] h-[50px] flex items-center justify-center rounded-full border-[#010f1c1a]"
+                    >
+                      <div style={{ color: "black" }}>
+                        <ProfileIcon width={32} height={32} />
+                      </div>
+                    </Link>
+                    <Link href={"/profile"}>
+                      <span className="block font-medium">Hello</span>
+                      <span className="block font-semibold">
+                        {user.name.split(" ")[0]}
+                      </span>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href={"/login"}
+                      className="border-2 w-[50px] h-[50px] flex items-center justify-center rounded-full border-[#010f1c1a]"
+                    >
+                      <div style={{ color: "black" }}>
+                        <ProfileIcon width={32} height={32} />
+                      </div>
+                    </Link>
+                    <Link href={"/login"}>
+                      <span className="block font-medium">Hello</span>
+                      <span className="block font-semibold">
+                        {isLoading ? "..." : "Sign In"}
+                      </span>
+                    </Link>
+                  </>
+                )}
               </div>
               <div className="flex items-center gap-5">
                 <Link href={"/wishlist"} className="relative">

@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "files": [],
   "include": [],
-  "types": ["node"],
+  // "types": ["node"],
   "references": [
     {
       "path": "./tsconfig.app.json"

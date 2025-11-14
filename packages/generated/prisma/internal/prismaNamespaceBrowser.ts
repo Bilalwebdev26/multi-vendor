@@ -49,8 +49,11 @@ export const AnyNull = runtime.objectEnumValues.instances.AnyNull
 
 
 export const ModelName = {
-  profileImages: 'profileImages',
-  users: 'users'
+  images: 'images',
+  users: 'users',
+  shopReviews: 'shopReviews',
+  shops: 'shops',
+  sellers: 'sellers'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -59,14 +62,16 @@ export type ModelName = (typeof ModelName)[keyof typeof ModelName]
  * Enums
  */
 
-export const ProfileImagesScalarFieldEnum = {
+export const ImagesScalarFieldEnum = {
   id: 'id',
   file_id: 'file_id',
   url: 'url',
-  userId: 'userId'
+  userId: 'userId',
+  sellerId: 'sellerId',
+  shopId: 'shopId'
 } as const
 
-export type ProfileImagesScalarFieldEnum = (typeof ProfileImagesScalarFieldEnum)[keyof typeof ProfileImagesScalarFieldEnum]
+export type ImagesScalarFieldEnum = (typeof ImagesScalarFieldEnum)[keyof typeof ImagesScalarFieldEnum]
 
 
 export const UsersScalarFieldEnum = {
@@ -80,6 +85,56 @@ export const UsersScalarFieldEnum = {
 } as const
 
 export type UsersScalarFieldEnum = (typeof UsersScalarFieldEnum)[keyof typeof UsersScalarFieldEnum]
+
+
+export const ShopReviewsScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  shopId: 'shopId',
+  ratting: 'ratting',
+  reviews: 'reviews',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ShopReviewsScalarFieldEnum = (typeof ShopReviewsScalarFieldEnum)[keyof typeof ShopReviewsScalarFieldEnum]
+
+
+export const ShopsScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  bio: 'bio',
+  category: 'category',
+  imageId: 'imageId',
+  coverBanner: 'coverBanner',
+  address: 'address',
+  opening_hours: 'opening_hours',
+  website: 'website',
+  socialLinks: 'socialLinks',
+  ratting: 'ratting',
+  sellerId: 'sellerId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ShopsScalarFieldEnum = (typeof ShopsScalarFieldEnum)[keyof typeof ShopsScalarFieldEnum]
+
+
+export const SellersScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  email: 'email',
+  phone_number: 'phone_number',
+  country: 'country',
+  password: 'password',
+  stripeId: 'stripeId',
+  followers: 'followers',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  shopId: 'shopId'
+} as const
+
+export type SellersScalarFieldEnum = (typeof SellersScalarFieldEnum)[keyof typeof SellersScalarFieldEnum]
 
 
 export const SortOrder = {

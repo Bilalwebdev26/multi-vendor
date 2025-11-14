@@ -18,12 +18,27 @@ export { Prisma }
 export * as $Enums from './enums.js'
 export * from './enums.js';
 /**
- * Model profileImages
+ * Model images
  * 
  */
-export type profileImages = Prisma.profileImagesModel
+export type images = Prisma.imagesModel
 /**
  * Model users
  * 
  */
 export type users = Prisma.usersModel
+/**
+ * Model shopReviews
+ * 
+ */
+export type shopReviews = Prisma.shopReviewsModel
+/**
+ * Model shops
+ * 
+ */
+export type shops = Prisma.shopsModel
+/**
+ * Model sellers
+ * 
+ */
+export type sellers = Prisma.sellersModel

@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from "express";
 import { ValidationError } from "../../../../packages/error-handler/index.js";
 import { redis } from "../../../../packages/libs/redis/index.js";
 import { sendEmail } from "./sendmail/index.js";
-import prisma from "@packages/libs/prisma/index.js";
+import prisma from "../../../../packages/libs/prisma/index.js";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -122,8 +122,8 @@ export const handleForgetPassword = async (
     }
     //find user and seller in DB
     const user =
-      userType === "user" &&
-      (await prisma.users.findUnique({ where: { email } }));
+      userType === "user" ?
+      (await prisma.users.findUnique({ where: { email } })):(await prisma.sellers.findUnique({where:{email}}));
     if (!user) {
       throw new ValidationError(`${userType} not found!`);
     }
@@ -134,7 +134,9 @@ export const handleForgetPassword = async (
       user.name,
       email,
       "Forget Password Mail",
-      "forget-Password-mail"
+      userType === "user"
+        ? "forget-Password-mail"
+        : "forget-password-seller-mail"
     );
     res
       .status(200)
@@ -149,7 +151,7 @@ export const verifyForgotPasswordOTP = async (
   next: NextFunction
 ) => {
   try {
-    console.log("req.body verify-otp : ",req.body)
+    console.log("req.body verify-otp : ", req.body);
     const { email, otp } = req.body;
     if (!email || !otp) {
       throw new ValidationError(`Missing required fields.`);

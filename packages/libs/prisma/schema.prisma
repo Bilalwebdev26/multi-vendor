@@ -1,4 +1,175 @@
 
+// generator client {
+//   provider = "prisma-client"
+//   output   = "../../generated/prisma"
+// }
+
+// datasource db {
+//   provider = "mongodb"
+//   url      = env("DATABASE_URL")
+//  }
+// // model images{
+// //   id String @id @default(auto()) @map("_id") @db.ObjectId
+// //   file_id String
+// //   url String
+// //   userId String? @db.ObjectId @unique
+// //   shopId String? @db.ObjectId @unique
+// //   users users? @relation(fields: [userId],references: [id])
+// //   shops shops? @relation(fields: [shopId],references: [id])
+// // }
+// // model users{
+// //   id String @id @default(auto()) @map("_id") @db.ObjectId
+// //   name String 
+// //   email String @unique
+// //   following String[]
+// //   avatar images?
+// //   password String? //?->optional when google signup
+// //   createdAt DateTime @default(now())
+// //   updatedAt DateTime @updatedAt
+// // }
+// // model shopReviews{
+// //   id String @id @default(auto()) @map("_id") @db.ObjectId
+// //   userId String? @db.ObjectId @unique
+// //   users users? @relation(fields: [userId],references: [id])
+// //   ratting Float
+// //   reviews String?
+// //   createdAt DateTime @default(now())
+// //   updatedAt DateTime @updatedAt
+// //   shopId String? @db.ObjectId @unique
+// //   shops shops? @relation(fields: [shopId],references: [id])
+// // }
+// // model shops{
+// //   id String @id @default(auto()) @map("_id") @db.ObjectId
+// //   name String 
+// //   bio String?
+// //   category String
+// //   avatar images?
+// //   // sellers sellers[]
+// //   imageId String? @db.ObjectId
+// //   coverBanner String?
+// //   address String
+// //   opening_hours String?
+// //   website String?
+// //   socialLinks Json[]
+// //   ratting Float @default(0)
+// //   reviews shopReviews[]
+// //   sellerId String @db.ObjectId @unique
+// //   sellers sellers? @relation(fields: [sellerId],references: [id])
+// //   createdAt DateTime @default(now())
+// //   updatedAt DateTime @updatedAt
+// // }
+// // model sellers{
+// //   id String @id @default(auto()) @map("_id") @db.ObjectId
+// //   name String 
+// //   email String @unique
+// //   phone_number String
+// //   country String
+// //   password String
+// //   stripeId String
+// //   followers String[]
+// //   avatar images?
+// //   createdAt DateTime @default(now())
+// //   updatedAt DateTime @updatedAt
+// //   shop shops?
+// //   shopId String? @db.ObjectId
+// // }
+// // model products{
+  
+// // }
+
+// // model images {
+// //   id String @id @default(auto()) @map("_id") @db.ObjectId
+// //   file_id String
+// //   url String
+// //   // foreign keys (optional) - add sellerId so images can be owner by user/shop/seller
+// //   userId   String? @db.ObjectId @unique   // unique -> if one image per user (avatar)
+// //   shopId   String? @db.ObjectId            // not unique if shop can have gallery
+// //   sellerId String? @db.ObjectId @unique   // unique -> one avatar per seller
+
+// //   // relation fields (names chosen for clarity)
+// //   users   users?  @relation(fields: [userId], references: [id])
+// //   shops   shops?  @relation(fields: [shopId], references: [id])
+// //   sellers sellers? @relation(fields: [sellerId], references: [id])
+// // }
+// model images{
+//    id String @id @default(auto()) @map("_id") @db.ObjectId
+//   file_id String
+//   url String
+//   // foreign keys (optional) - add sellerId so images can be owner by user/shop/seller
+//   userId   String? @db.ObjectId @unique   // unique -> if one image per user (avatar)
+//   shopId   String? @db.ObjectId            // not unique if shop can have gallery
+//   sellerId String? @db.ObjectId @unique   // unique -> one avatar per seller
+
+//   // relation fields (names chosen for clarity)
+//   users   users?  @relation(fields: [userId], references: [id])
+//   shops   shops?  @relation(fields: [shopId], references: [id])
+//   sellers sellers? @relation(fields: [sellerId], references: [id])
+// }
+// model users {
+//   id String @id @default(auto()) @map("_id") @db.ObjectId
+//   name String 
+//   email String @unique
+//   following String[]
+//   avatar images?        // one-to-one: user's avatar image
+//   password String? 
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+
+//   // ADD: opposite side of shopReviews relation
+//   shopReviews shopReviews[]    // user can have multiple reviews
+// }
+
+// model shopReviews {
+//   id String @id @default(auto()) @map("_id") @db.ObjectId
+
+//   userId String? @db.ObjectId
+//   users  users?     @relation(fields: [userId], references: [id])
+
+//   shopId String? @db.ObjectId
+//   shops  shops?   @relation(fields: [shopId], references: [id])
+
+//   ratting Float
+//   reviews String?
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }
+
+// model shops {
+//   id String @id @unique @default(auto()) @map("_id") @db.ObjectId
+//   name String 
+//   bio String?
+//   category String
+//   avatar images?        // shop avatar (one-to-one)
+//   imageId String? @db.ObjectId
+//   coverBanner String?
+//   address String
+//   opening_hours String?
+//   website String?
+//   socialLinks Json[]
+//   ratting Float @default(0)
+//   reviews shopReviews[]   // already present - keep array
+//   sellerId String @db.ObjectId @unique
+//   sellers sellers? @relation(fields: [sellerId], references: [id])
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }
+
+// model sellers {
+//   id String @id @default(auto()) @map("_id") @db.ObjectId
+//   name String 
+//   email String @unique
+//   phone_number String
+//   country String
+//   password String
+//   stripeId String
+//   followers String[]
+//   avatar images?   // seller avatar -> requires images.sellerId FK
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+//   shop shops?
+//   shopId String? @db.ObjectId
+// }
+
 generator client {
   provider = "prisma-client"
   output   = "../../generated/prisma"
@@ -8,20 +179,84 @@ datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
 }
-model profileImages{
+
+model images {
   id String @id @default(auto()) @map("_id") @db.ObjectId
   file_id String
   url String
-  userId String? @db.ObjectId @unique
-  users users? @relation(fields: [userId],references: [id])
+
+  // FK: avatar for user & seller (one-to-one), gallery for shop (one-to-many)
+  userId   String? @db.ObjectId @unique    // one-to-one avatar for user
+  sellerId String? @db.ObjectId @unique    // one-to-one avatar for seller
+  shopId   String? @db.ObjectId             // many images per shop (gallery)
+
+  users   users?   @relation(fields: [userId], references: [id])
+  sellers sellers? @relation(fields: [sellerId], references: [id])
+  shops   shops?   @relation(fields: [shopId], references: [id])
 }
-model users{
+
+model users {
   id String @id @default(auto()) @map("_id") @db.ObjectId
   name String 
   email String @unique
   following String[]
-  avatar profileImages?
-  password String? //?->optional when google signup
+  avatar images?        // one-to-one: user's avatar image
+  password String? 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  shopReviews shopReviews[]    // user can have multiple reviews
+}
+
+model shopReviews {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  userId String? @db.ObjectId
+  users  users?     @relation(fields: [userId], references: [id])
+
+  shopId String? @db.ObjectId
+  shops  shops?   @relation(fields: [shopId], references: [id])
+
+  ratting Float
+  reviews String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model shops {
+  id String @id @default(auto()) @map("_id") @db.ObjectId   // remove @unique here
+  name String 
+  bio String?
+  category String
+  // shop gallery (one-to-many)
+  images images[]        // <- IMPORTANT: shop has many images
+  imageId String? @db.ObjectId
+  coverBanner String?
+  address String
+  opening_hours String?
+  website String?
+  socialLinks Json[]
+  ratting Float @default(0)
+  reviews shopReviews[]   // one-to-many reviews
+  sellerId String @db.ObjectId @unique
+  sellers sellers? @relation(fields: [sellerId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model sellers {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  name String 
+  email String @unique
+  phone_number String
+  country String
+  password String
+  stripeId String?
+  followers String[]
+  avatar images?   // seller avatar (one-to-one)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  shop shops?
+  shopId String? @db.ObjectId
 }

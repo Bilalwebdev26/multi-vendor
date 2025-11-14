@@ -10,11 +10,17 @@ import {
 } from "../utils/auth.helper.js";
 // import prisma from "../../../../packages/libs/prisma";
 // import { ValidationError } from "../../../../packages/error-handler";
-import prisma from "../../../../packages/libs/prisma/index.js";
+// import prisma from "../../../../packages/libs/prisma/index.js";
 import { AuthError, ValidationError } from "@packages/error-handler/index.js";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import jwt, { JsonWebTokenError } from "jsonwebtoken";
 import { setCookie } from "../utils/cookies/setcookies.js";
+import { users } from "@packages/generated/prisma/client.js";
+import prisma from "@packages/libs/prisma/index.js";
+
+interface AuthRequest extends Request {
+  user?: users | null;
+}
 
 //user registration
 export const userRegistration = async (
@@ -22,7 +28,7 @@ export const userRegistration = async (
   res: Response,
   next: NextFunction
 ) => {
-  console.log("req.body.data : ",req.body)
+  console.log("req.body.data : ", req.body);
   validateRegisterationData(req.body, "user");
   const { name, email, password, phone_number, country } = req.body;
   try {
@@ -87,7 +93,7 @@ export const loginUser = async (
   next: NextFunction
 ) => {
   try {
-    console.log("Req.body : ",req)
+    console.log("Req.body : ", req);
     const { email, password } = req.body;
     if (!email || !password) {
       return next(new ValidationError("All fields are required"));
@@ -127,6 +133,58 @@ export const loginUser = async (
       .json({ message: `Error while Login ${error}`, success: false });
   }
 };
+//getUser
+export const getUserProfile = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return new AuthError("User not found.");
+    }
+    return res.status(200).json({ message: "User get successFully", user });
+  } catch (error) {
+    return res.status(500).json({ message: "Error while get user profile" });
+  }
+};
+//refresh -> refreshtoken
+export const refreshToken = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+      return new ValidationError("Unauthorized No refresh Token");
+    }
+    const decodedToken = jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_JWT_SECRET as string
+    ) as { id: string; role: string };
+    if (!decodedToken || !decodedToken.id || !decodedToken.role) {
+      return new JsonWebTokenError("ForBidden Inavlid Refresh Token");
+    }
+    const user = await prisma.users.findUnique({
+      where: { id: decodedToken.id },
+    });
+    if (!user) {
+      return new AuthError("User/Seller not found");
+    }
+    //generate new access token
+    const newAccessToken = jwt.sign(
+      { id: decodedToken.id, role: decodedToken.role },
+      process.env.ACCESS_TOKEN_JWT_SECRET as string,
+      { expiresIn: "15m" }
+    );
+    setCookie(res, "access-token", newAccessToken);
+    return res.status(201).json({ success: true });
+  } catch (error) {
+    return res.status(500).json({ success: false });
+  }
+};
 //Forgot user password
 export const userForgotPassword = async (
   req: Request,
@@ -142,7 +200,7 @@ export const verifyUserForgotPassword = async (
   res: Response,
   next: NextFunction
 ) => {
-  console.log("verifyForgotPasswordOTP ",req)
+  console.log("verifyForgotPasswordOTP ", req);
   await verifyForgotPasswordOTP(req, res, next);
 };
 //reset user password
@@ -178,5 +236,113 @@ export const resetUserPassword = async (
     return res
       .status(500)
       .json({ message: `Error while reset password ${error}`, success: false });
+  }
+};
+//--------------Seller-----------------------
+export const registerSeller = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { name, email } = req.body;
+    validateRegisterationData(req.body, "seller");
+    //after clear validaton
+    const existingSeller = await prisma.sellers.findUnique({
+      where: { email },
+    });
+    if (existingSeller) {
+      throw new ValidationError("Seller already exist with this email.");
+    }
+    await checkOtpRestriction(email, next);
+    await trackOptRequests(email, next);
+    await sendOtp(
+      name,
+      email,
+      "Seller Activation OTP mail",
+      "seller-activation"
+    );
+    return res
+      .status(200)
+      .json({
+        success: true,
+        message: "OTP send to your mail please verify your account",
+      });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ success: false, message: "Error while register seller" });
+  }
+};
+//verify seller otp
+export const verifySellerOTP = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { name, email, password, otp, phone_number, country } = req.body;
+    if (!name || !email || !password || !otp || !phone_number || !country) {
+      return next(new ValidationError("All fields are required"));
+    }
+    const existingSeller = await prisma.sellers.findUnique({
+      where: { email },
+    });
+    if (existingSeller) {
+      throw new ValidationError("Seller already exist with this email.");
+    }
+    //verify otp
+    await verifyOTP(email, otp, next);
+    const hasherPassword = await bcrypt.hash(password, 10);
+    //create user
+    const seller = await prisma.sellers.create({
+      data: { name, email, password: hasherPassword, phone_number, country },
+    });
+    return res
+      .status(201)
+      .json({ message: "Seller created successfull", success: true, seller });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ success: false, message: "Error while verify seller otp." });
+  }
+};
+export const createNewShop = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { name, bio, category, address, opening_hours, website, sellerId } =
+      req.body;
+    if (
+      !name ||
+      !bio||
+      !category ||
+      !address ||
+      !opening_hours ||
+      !website ||
+      !sellerId
+    ) {
+      return next(new ValidationError("All fields are required"));
+    }
+    const shopData:any = {
+      name,
+      bio,
+      category,
+      address,
+      opening_hours,
+      website ,
+      sellerId
+    }
+    if(website && website.trim()!==""){
+      shopData.website=website
+    }
+    const shop = await prisma.shops.create({data:shopData})
+    return res.status(201).json({message:"Shop created successfully",success:true,shop})
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ success: false, message: "Error while create shop." });
   }
 };
