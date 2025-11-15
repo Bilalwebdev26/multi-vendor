@@ -6,3 +6,8 @@ otp_request_count:email@gmail.com ->
 otp_spam_email:email@gmail.com
 otp_request_count:email@gmail.com
 otp_lock:email@gmail.com -> lock for 30 mins
+
+
+Stripe -> bilalhumza
+redis -> bilal.ali.wdev
+mongodb -> gold9495

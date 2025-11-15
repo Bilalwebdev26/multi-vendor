@@ -8,20 +8,27 @@ import {
   verifyForgotPasswordOTP,
   verifyOTP,
 } from "../utils/auth.helper.js";
-// import prisma from "../../../../packages/libs/prisma";
-// import { ValidationError } from "../../../../packages/error-handler";
-// import prisma from "../../../../packages/libs/prisma/index.js";
 import { AuthError, ValidationError } from "@packages/error-handler/index.js";
 import bcrypt from "bcryptjs";
 import jwt, { JsonWebTokenError } from "jsonwebtoken";
 import { setCookie } from "../utils/cookies/setcookies.js";
-import { users } from "@packages/generated/prisma/client.js";
+import { sellers, users } from "@packages/generated/prisma/client.js";
 import prisma from "@packages/libs/prisma/index.js";
+import Stripe from "stripe";
 
+
+//---------------Setup Stripe------------------------
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2025-10-29.clover",
+});
+//--------------Schema interface---------------------
 interface AuthRequest extends Request {
   user?: users | null;
 }
-
+interface SellerAuthRequest extends Request {
+  seller?: sellers | null;
+}
+//-----------------------User---------------------------
 //user registration
 export const userRegistration = async (
   req: Request,
@@ -238,14 +245,14 @@ export const resetUserPassword = async (
       .json({ message: `Error while reset password ${error}`, success: false });
   }
 };
-//--------------Seller-----------------------
+//----------------------Seller-----------------------
 export const registerSeller = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const { name, email } = req.body;
+    const { name, email, password, country, phone_number } = req.body;
     validateRegisterationData(req.body, "seller");
     //after clear validaton
     const existingSeller = await prisma.sellers.findUnique({
@@ -262,12 +269,15 @@ export const registerSeller = async (
       "Seller Activation OTP mail",
       "seller-activation"
     );
-    return res
-      .status(200)
-      .json({
-        success: true,
-        message: "OTP send to your mail please verify your account",
-      });
+    return res.status(200).json({
+      success: true,
+      message: "OTP send to your mail please verify your account",
+      name,
+      email,
+      password,
+      phone_number,
+      country,
+    });
   } catch (error) {
     return res
       .status(500)
@@ -282,6 +292,7 @@ export const verifySellerOTP = async (
 ) => {
   try {
     const { name, email, password, otp, phone_number, country } = req.body;
+    console.log("Req.body : ", req);
     if (!name || !email || !password || !otp || !phone_number || !country) {
       return next(new ValidationError("All fields are required"));
     }
@@ -317,7 +328,7 @@ export const createNewShop = async (
       req.body;
     if (
       !name ||
-      !bio||
+      !bio ||
       !category ||
       !address ||
       !opening_hours ||
@@ -326,23 +337,131 @@ export const createNewShop = async (
     ) {
       return next(new ValidationError("All fields are required"));
     }
-    const shopData:any = {
+    const shopData: any = {
       name,
       bio,
       category,
       address,
       opening_hours,
-      website ,
-      sellerId
+      website,
+      sellerId,
+    };
+    if (website && website.trim() !== "") {
+      shopData.website = website;
     }
-    if(website && website.trim()!==""){
-      shopData.website=website
-    }
-    const shop = await prisma.shops.create({data:shopData})
-    return res.status(201).json({message:"Shop created successfully",success:true,shop})
+    const shop = await prisma.shops.create({ data: shopData });
+    return res
+      .status(201)
+      .json({ message: "Shop created successfully", success: true, shop });
   } catch (error) {
     return res
       .status(500)
       .json({ success: false, message: "Error while create shop." });
+  }
+};
+export const sellerLogin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return next(new ValidationError("All fields are required"));
+    }
+    const seller = await prisma.sellers.findUnique({ where: { email } });
+    if (!seller) {
+      return next(new AuthError("Seller not found"));
+    }
+    //check password
+    const checkSeller = await bcrypt.compare(password, seller.password!);
+    if (!checkSeller) {
+      return next(new AuthError("Invalid creadentials"));
+    }
+    //generate and access token
+    const refreshToken = jwt.sign(
+      { id: seller.id, role: "seller" },
+      process.env.REFRESH_TOKEN_JWT_SECRET as string,
+      { expiresIn: "7d" }
+    );
+    const accessToken = jwt.sign(
+      { id: seller.id, role: "seller" },
+      process.env.ACCESS_TOKEN_JWT_SECRET as string,
+      { expiresIn: "15m" }
+    );
+    //store refresh and access token in an httpOnly secure cookie
+    setCookie(res, "seller_refresh-token", refreshToken);
+    setCookie(res, "seller_access-token", accessToken);
+    return res.status(200).json({
+      message: "Seller Login SuccessFully",
+      success: true,
+      user: { id: seller.id, email: seller.email, name: seller.name },
+    });
+  } catch (error) {
+    console.log("Login error : ", error);
+    return res
+      .status(500)
+      .json({ message: `Error while Login ${error}`, success: false });
+  }
+};
+//get logged in seller
+export const getSeller = async (
+  req: SellerAuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const seller = req.seller;
+    res.status(201).json({
+      success: true,
+      seller,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+//-------------------------------Stripe-------------------
+export const createStripeLink = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { sellerId } = req.body;
+    console.log("SellerId : ",sellerId)
+    if (!sellerId) return next(new ValidationError("Seller Id is missing..."));
+    const seller = await prisma.sellers.findUnique({ where: { id: sellerId } });
+    if (!seller) return next(new AuthError("Seller is missing..."));
+    //create seller account
+    const account = await stripe.accounts.create({
+      type: "express",
+      email: seller?.email,
+      country: "US",
+      capabilities: {
+        card_payments: { requested: true },
+        transfers: { requested: true },
+      },
+    });
+    await prisma.sellers.update({
+      where: { id: sellerId },
+      data: { stripeId: account.id },
+    });
+    //generate account link so seller redirect
+    const accountLink = await stripe.accountLinks.create({
+      account: account.id,
+      refresh_url: `http://localhost:3000/success`,
+      return_url: `http://localhost:3000/success`,
+      type: "account_onboarding",
+    });
+    return res.status(201).json({
+      success: true,
+      message: "Account Link generated successFully",
+      url: accountLink.url,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Error while generate stripe account link.",error,
+    });
   }
 };

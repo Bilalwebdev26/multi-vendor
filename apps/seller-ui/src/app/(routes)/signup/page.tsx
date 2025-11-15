@@ -8,6 +8,10 @@ import { useForm } from "react-hook-form";
 import axios, { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
 import { countries } from "apps/seller-ui/src/utils/countries";
+import CreateShop from "apps/seller-ui/src/shared/modules/auth/createShop";
+import Image from "next/image";
+import toast from 'react-hot-toast';
+
 
 const page = () => {
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -65,7 +69,7 @@ const page = () => {
       console.log("Res : ", response);
       return response.data;
     },
-    onSuccess: (data) => {
+    onSuccess: (_, data) => {
       setSellerData(data);
       setShowOtp(true);
       setCanResend(false);
@@ -77,7 +81,7 @@ const page = () => {
   const verifyOTPmutation = useMutation({
     mutationFn: async () => {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_SERVER_URL}/auth/api/v1/verify-register-user`,
+        `${process.env.NEXT_PUBLIC_SERVER_URL}/auth/api/v1/verify-seller-registration`,
         {
           ...sellerData,
           otp: otp.join(""),
@@ -86,6 +90,7 @@ const page = () => {
       return response.data;
     },
     onSuccess: (data) => {
+      console.log("Data in onsucess : ", data);
       setSellerId(data?.seller?.id);
       setActiveStep(2);
     },
@@ -108,6 +113,21 @@ const page = () => {
   //setServerError(null)
   //setShowOtp(true)
   console.log("sellerData : ", sellerData);
+  console.log("sellerData Id : ", sellerId);
+  //Payment fn
+  const connectStripe = async() => {
+    try {
+       const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URL}/auth/api/v1/create-stripe-link`,
+        {sellerId}
+       )
+       if(response.data.url){
+        window.location.href=response.data.url
+       }
+    } catch (error) {
+      toast.error("Stripe connection error")
+      console.log("Stripe connection error : ",error)
+    }
+  };
   return (
     <div className="w-full flex flex-col items-center pt-10 min-h-screen">
       {/* Stepper */}
@@ -219,15 +239,16 @@ const page = () => {
                 <label htmlFor="" className="block text-gray-700 mb-1">
                   Country
                 </label>
-                <select className="w-full p-2 border border-gray-300 outline-0 rounded-[4px]" {...register("country",{required:"Country is required."})}>
-                    <option value="">Select your counrty</option>
-                    {
-                        countries.map((country)=>(
-                            <option key={country.code} value={country.code}>
-                                {country.name}
-                            </option>
-                        ))
-                    }
+                <select
+                  className="w-full p-2 border border-gray-300 outline-0 rounded-[4px]"
+                  {...register("country", { required: "Country is required." })}
+                >
+                  <option value="">Select your counrty</option>
+                  {countries.map((country) => (
+                    <option key={country.code} value={country.code}>
+                      {country.name}
+                    </option>
+                  ))}
                 </select>
                 {/* <select
                   className="w-full p-2 border border-gray-300 outline-0 rounded-[4px]"
@@ -364,6 +385,28 @@ const page = () => {
               </div>
             )}
           </>
+        )}
+        {activeStep === 2 && (
+          <CreateShop sellerId={sellerId} setActiveStep={setActiveStep} />
+        )}
+        {activeStep === 3 && (
+          <div className="text-center">
+            <h3 className="text-2xl font-semibold">Connect your Bank's Here</h3>
+            <br />
+            <div className="flex items-center flex-col gap-4">
+              <button
+                onClick={connectStripe}
+                className="w-full m-auto flex items-center justify-center px-3 gap-3 text-lg bg-purple-200 py-3 text-white rounded-lg"
+              >
+                <Image  src="/logo/stripee.png" alt="Logo" width={100} height={100} color="purple"/>
+                 {/* <span>Connect Stripe</span> */}
+              </button>
+              <button className="w-full m-auto flex items-center justify-center gap-3 text-lg bg-yellow-300  text-white rounded-lg">
+                 <Image  src="/logo/paypal.png" alt="Logo" width={100} height={100} color=""/>
+                {/* Connect PayPal */}
+              </button>
+            </div>
+          </div>
         )}
       </div>
       {/* <div className="w-full py-10 min-h-screen  bg-[#f1f1f1]">
