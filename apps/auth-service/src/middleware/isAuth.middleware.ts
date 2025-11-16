@@ -56,7 +56,7 @@ export const sellerAuthMiddleware = async (
 ) => {
   try {
     const token =
-      req.cookies?.["seller-access-token"] ||
+      req.cookies?.["seller_access-token"] ||
       req.headers.authorization?.split(" ")[1];
     if (!token) {
       return res.status(401).json({ message: "Token missing" });

@@ -20,7 +20,7 @@ const page = () => {
     mutationFn: async (data: FormData) => {
       console.log("URI : ", process.env.NEXT_PUBLIC_SERVER_URL);
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_SERVER_URL}/auth/api/v1/login-user`,
+        `${process.env.NEXT_PUBLIC_SERVER_URL}/auth/api/v1/seller-login`,
          data,{ withCredentials: true }
       );
       console.log("Res : ", response);

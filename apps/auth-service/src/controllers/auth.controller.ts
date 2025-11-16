@@ -16,7 +16,6 @@ import { sellers, users } from "@packages/generated/prisma/client.js";
 import prisma from "@packages/libs/prisma/index.js";
 import Stripe from "stripe";
 
-
 //---------------Setup Stripe------------------------
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-10-29.clover",
@@ -114,6 +113,8 @@ export const loginUser = async (
     if (!checkUser) {
       return next(new AuthError("Invalid creadentials"));
     }
+    res.clearCookie("seller_refresh-token")
+    res.clearCookie("seller_access-token")
     //generate and access token
     const refreshToken = jwt.sign(
       { id: user.id, role: "user" },
@@ -163,7 +164,8 @@ export const refreshToken = async (
   next: NextFunction
 ) => {
   try {
-    const refreshToken = req.cookies.refreshToken;
+    const refreshToken =
+      req.cookies?.["refresh-token"] || req.cookies?.["seller_refresh-token"];
     if (!refreshToken) {
       return new ValidationError("Unauthorized No refresh Token");
     }
@@ -174,10 +176,18 @@ export const refreshToken = async (
     if (!decodedToken || !decodedToken.id || !decodedToken.role) {
       return new JsonWebTokenError("ForBidden Inavlid Refresh Token");
     }
-    const user = await prisma.users.findUnique({
-      where: { id: decodedToken.id },
-    });
-    if (!user) {
+    let account;
+    if (decodedToken.role === "user") {
+      account = await prisma.users.findUnique({
+        where: { id: decodedToken.id },
+      });
+    } else if (decodedToken.role === "seller") {
+      account = await prisma.sellers.findUnique({
+        where: { id: decodedToken.id },
+        include: { shop: true },
+      });
+    }
+    if (!account) {
       return new AuthError("User/Seller not found");
     }
     //generate new access token
@@ -186,7 +196,11 @@ export const refreshToken = async (
       process.env.ACCESS_TOKEN_JWT_SECRET as string,
       { expiresIn: "15m" }
     );
-    setCookie(res, "access-token", newAccessToken);
+    if (decodedToken.role === "user") {
+      setCookie(res, "access-token", newAccessToken);
+    } else if (decodedToken.role === "seller") {
+      setCookie(res, "seller_access-token", newAccessToken);
+    }
     return res.status(201).json({ success: true });
   } catch (error) {
     return res.status(500).json({ success: false });
@@ -359,6 +373,7 @@ export const createNewShop = async (
       .json({ success: false, message: "Error while create shop." });
   }
 };
+
 export const sellerLogin = async (
   req: Request,
   res: Response,
@@ -378,6 +393,8 @@ export const sellerLogin = async (
     if (!checkSeller) {
       return next(new AuthError("Invalid creadentials"));
     }
+    res.clearCookie("access-token")
+    res.clearCookie("refresh-token")
     //generate and access token
     const refreshToken = jwt.sign(
       { id: seller.id, role: "seller" },
@@ -428,7 +445,7 @@ export const createStripeLink = async (
 ) => {
   try {
     const { sellerId } = req.body;
-    console.log("SellerId : ",sellerId)
+    console.log("SellerId : ", sellerId);
     if (!sellerId) return next(new ValidationError("Seller Id is missing..."));
     const seller = await prisma.sellers.findUnique({ where: { id: sellerId } });
     if (!seller) return next(new AuthError("Seller is missing..."));
@@ -461,7 +478,8 @@ export const createStripeLink = async (
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: "Error while generate stripe account link.",error,
+      message: "Error while generate stripe account link.",
+      error,
     });
   }
 };
