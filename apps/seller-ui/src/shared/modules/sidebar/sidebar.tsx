@@ -6,7 +6,7 @@ import React, { useEffect } from "react";
 import { Box } from "../Box";
 import { Sidebar } from "./sidebar.styles";
 import Link from "next/link";
-import { BadgeCheck, BellPlus, Boxes, CalendarPlus, CreditCard, Package, SquarePlus } from "lucide-react";
+import { BadgeCheck, BellPlus, BellRing, Boxes, CalendarPlus, CreditCard, LogOut, Mail, Package, Settings, SquarePlus, TicketPercent } from "lucide-react";
 import SideBarItems from "./sidebar.items";
 import { Home } from "lucide-react";
 import SidebarMenu from "./sidebar.menu";
@@ -54,7 +54,7 @@ const SideBarWrapper = () => {
         <Sidebar.Body className="body sidebar">
           <SideBarItems
             title="Dashboard"
-            icon={<Home />}
+            icon={<Home color={getIconColor("/dashboard")}/>}
             isActive={activeSideBar === "/dashboard"}
             href="/dashboard"
           />
@@ -103,16 +103,36 @@ const SideBarWrapper = () => {
             </SidebarMenu>
             <SidebarMenu title="Controllers">
               <SideBarItems
-                title="Create Events"
-                icon={<CalendarPlus color={getIconColor("/dashboard/create-events")}/>}
-                isActive={activeSideBar === "/dashboard/create-events"}
-                href="/dashboard/create-events"
+                title="Inbox"
+                icon={<Mail color={getIconColor("/dashboard/inbox")}/>}
+                isActive={activeSideBar === "/dashboard/inbox"}
+                href="/dashboard/inbox"
               />
               <SideBarItems
-                title="All Events"
-                icon={<BellPlus color={getIconColor("/dashboard/all-events")}/>}
-                isActive={activeSideBar === "/dashboard/all-events"}
-                href="/dashboard/all-events"
+                title="Settings"
+                icon={<Settings color={getIconColor("/dashboard/settings")}/>}
+                isActive={activeSideBar === "/dashboard/settings"}
+                href="/dashboard/settings"
+              />
+              <SideBarItems
+                title="Notification"
+                icon={<BellRing color={getIconColor("/dashboard/notification")}/>}
+                isActive={activeSideBar === "/dashboard/notification"}
+                href="/dashboard/notification"
+              />
+            </SidebarMenu>
+             <SidebarMenu title="Extras">
+              <SideBarItems
+                title="Discount Codes"
+                icon={<TicketPercent color={getIconColor("/dashboard/discount-codes")}/>}
+                isActive={activeSideBar === "/dashboard/discount-codes"}
+                href="/dashboard/discount-codes"
+              />
+              <SideBarItems
+                title="Logout"
+                icon={<LogOut color={getIconColor("/logout")}/>}
+                isActive={activeSideBar === "/logout"}
+                href="/"
               />
             </SidebarMenu>
           </div>
