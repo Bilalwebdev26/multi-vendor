@@ -101,6 +101,7 @@ const page = () => {
         <div className="md:w-[65%]">
           <div className="w-full flex gap-6">
             {/* Product inputs */}
+            {/*half Left side  */}
             <div className="w-1/2">
               <Input
                 label="Product Title"
@@ -252,6 +253,7 @@ const page = () => {
                 )}
               </div>
             </div>
+            {/* Half right side */}
             <div className="w-1/2"></div>
           </div>
         </div>
