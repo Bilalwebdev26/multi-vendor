@@ -12,6 +12,7 @@ import swaggerUi from "swagger-ui-express";
 import proxy from "express-http-proxy";
 import cookieParser from "cookie-parser";
 import axios from "axios";
+import { initailizeConfig } from "./lib/initialSiteConfig";
 
 const app = express();
 app.use(
@@ -48,6 +49,9 @@ app.use(express.urlencoded({ limit: "100mb", extended: true }));
 app.use("/assets", express.static(path.join(__dirname, "assets")));
 app.set("trust proxy", 1);
 //-----------------------------------------------------
+app.get("/", (req, res) => {
+  res.send({ message: "Welcome to api-gateway!" });
+});
 app.get("/apigateway-health", (req, res) => {
   res.send({ message: "Welcome to api-gateway!" });
 });
@@ -56,5 +60,11 @@ app.use("/auth",proxy("http://localhost:6001"))
 const port = process.env.PORT || 8080;
 const server = app.listen(port, () => {
   console.log(`Listening at http://localhost:${port}/api`);
+  try {
+    initailizeConfig()
+    console.log("Initailize successfully")
+  } catch (error) {
+    console.log("Failed to initailize")
+  }
 });
 server.on("error", console.error);

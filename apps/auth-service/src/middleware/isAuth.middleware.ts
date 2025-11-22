@@ -1,6 +1,8 @@
 import { AuthError } from "@packages/error-handler";
-import { sellers, users } from "@packages/generated/prisma/client";
-import prisma from "@packages/libs/prisma";
+// import { sellers, users } from "@packages/generated/prisma/client";
+// import prisma from "@packages/libs/prisma";
+import {prisma} from "../../../../lib/prisma.js"
+import { sellers, users } from "@generated/prisma/client.js";
 // import prisma from "@packages/libs/prisma";
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";

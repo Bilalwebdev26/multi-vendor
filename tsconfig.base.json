@@ -6,7 +6,7 @@
     "importHelpers": true,
     "isolatedModules": true,
     "lib": ["es2022"],
-    "baseUrl":".",
+    "baseUrl": ".",
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "noEmitOnError": true,
@@ -18,10 +18,11 @@
     "strict": true,
     "target": "es2022",
     "customConditions": ["@multi-vendor/source"],
-    "paths":{
-      "@packages/*":[
-        "packages/*"
-      ]
+    "paths": {
+      "@packages/*": ["packages/*"],
+      "@generated/*": ["generated/*"],
+      "@lib/prisma": ["lib/prisma.ts"],
+      "@lib/*": ["lib/*"]
     }
   }
 }

@@ -11,9 +11,21 @@
 //   },
 // });
 
-import "dotenv/config";
-import { defineConfig } from "@prisma/config"; // NOT "prisma/config"
+// import "dotenv/config";
+// import { defineConfig } from "@prisma/config"; // NOT "prisma/config"
+
+// export default defineConfig({
+//   schema: "./packages/libs/prisma/schema.prisma",
+// });
+import 'dotenv/config'
+import { defineConfig, env } from 'prisma/config'
 
 export default defineConfig({
-  schema: "./packages/libs/prisma/schema.prisma",
-});
+  schema: 'prisma/schema.prisma',
+  migrations: {
+    path: 'prisma/migrations',
+  },
+  datasource: {
+    url: env('DATABASE_URL'),
+  },
+})

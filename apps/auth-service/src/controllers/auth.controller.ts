@@ -12,8 +12,8 @@ import { AuthError, ValidationError } from "@packages/error-handler/index.js";
 import bcrypt from "bcryptjs";
 import jwt, { JsonWebTokenError } from "jsonwebtoken";
 import { setCookie } from "../utils/cookies/setcookies.js";
-import { sellers, users } from "@packages/generated/prisma/client.js";
-import prisma from "@packages/libs/prisma/index.js";
+import { sellers, users } from "@generated/prisma/client.js";
+import {prisma} from "../../../../lib/prisma.js"
 import Stripe from "stripe";
 
 //---------------Setup Stripe------------------------

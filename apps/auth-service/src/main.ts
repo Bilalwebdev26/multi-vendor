@@ -42,7 +42,7 @@ app.get("/", (req, res) => {
 });
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use("/api/v1", authRoutes);
-const PORT = process.env.PORT || 6001;
+const PORT = process.env.AUTH_PORT || 6001;
 const server = app.listen(PORT, () => {
   console.log(`Auth service running on PORT : ${PORT}`);
   console.log(`Auth service API Docs : http://localhost:${PORT}/api-docs/`);

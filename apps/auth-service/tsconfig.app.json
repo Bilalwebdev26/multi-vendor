@@ -10,7 +10,9 @@
   },
   "include": [
     "src/**/*.ts",
-    "../../packages/**/*.ts"
+    "../../packages/**/*.ts",
+    "../../lib/**/*",
+    "../../generated/**/*"
   ],
   "exclude": [
     "out-tsc",
