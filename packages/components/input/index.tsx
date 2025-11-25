@@ -13,7 +13,7 @@ const Input = forwardRef<HTMLElement | HTMLTextAreaElement, Props>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block font-semibold text-gray-300 mb-1">
+          <label className="block font-semibold  mb-1">
             {label}
           </label>
         )}

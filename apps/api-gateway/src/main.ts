@@ -56,8 +56,9 @@ app.get("/apigateway-health", (req, res) => {
   res.send({ message: "Welcome to api-gateway!" });
 });
 app.use("/auth",proxy("http://localhost:6001"))
+app.use("/product",proxy("http://localhost:6002"))
 
-const port = process.env.PORT || 8080;
+const port = process.env.API_GATEWAY_PORT || 8080;
 const server = app.listen(port, () => {
   console.log(`Listening at http://localhost:${port}/api`);
   try {
