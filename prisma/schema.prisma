@@ -160,7 +160,7 @@ model discount_codes{
   discountType String
   discountValue Float
   discountCode String @unique
-  sellerId  String @db.ObjectId @unique
+  sellerId  String 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

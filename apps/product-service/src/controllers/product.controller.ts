@@ -28,11 +28,18 @@ export const createDiscountCode = async (
   next: NextFunction
 ) => {
   const { public_name, discountType, discountValue, discountCode } = req.body;
+  console.log("public_name : ", public_name);
+  console.log("discountType : ", discountType);
+  console.log("discountValue : ", discountValue);
+  console.log("discountCode : ", discountCode);
+  console.log("req.seller.id : ", req.seller.id);
+  console.log(typeof req.seller.id);
   try {
     //check discount exist or not
     const isDiscountCodeExist = await prisma.discount_codes.findUnique({
       where: { discountCode },
     });
+    console.log("isDiscountCodeExist : ", isDiscountCodeExist);
     if (isDiscountCodeExist) {
       return next(new ValidationError("Discount Code Already available"));
     }
@@ -40,16 +47,26 @@ export const createDiscountCode = async (
       data: {
         public_name,
         discountType,
-        discountValue,
+        discountValue:Number(discountValue),
         discountCode,
         sellerId: req.seller.id,
       },
     });
+    console.log("newDiscountCode : ", newDiscountCode);
     return res
       .status(201)
       .json({ message: "Discount Code Created SuccessFully", newDiscountCode });
-  } catch (error) {
-    return res.status(500).json({message:"Server Error! while generating discount code."})
+  } catch (error: any) {
+    console.log("🔥 Prisma FULL ERROR >>>>", error);
+    console.log("🔥 Prisma ERROR MESSAGE >>>>", error.message);
+    console.log("🔥 Prisma ERROR META >>>>", error.meta);
+    console.log("🔥 Prisma ERROR CAUSE >>>>", error.cause);
+    return res.status(500).json({
+      message: "Server Error! while generating discount code.",
+      error,
+      meta: error.meta,
+      cause: error.cause,
+    });
   }
 };
 export const getDiscountCode = async (
@@ -60,7 +77,7 @@ export const getDiscountCode = async (
   try {
     //check discount codes exist or not
     const discountCodeExist = await prisma.discount_codes.findMany({
-      where: { sellerId:req.seller.id },
+      where: { sellerId: req.seller.id },
     });
     if (!discountCodeExist) {
       return next(new ValidationError("Discount Code Not Exist."));
@@ -69,7 +86,9 @@ export const getDiscountCode = async (
       .status(201)
       .json({ message: "Discount Code Found SuccessFully", discountCodeExist });
   } catch (error) {
-    return res.status(500).json({message:"Server Error! while finding discount code."})
+    return res
+      .status(500)
+      .json({ message: "Server Error! while finding discount code." });
   }
 };
 export const deleteDiscountCode = async (
@@ -77,23 +96,31 @@ export const deleteDiscountCode = async (
   res: Response,
   next: NextFunction
 ) => {
-//   const { discountCode } = req.body;
-  const id = req.params //-> discount code id
-  const sellerId = req.seller?.id
+  //   const { discountCode } = req.body;
+  const id = req.params.id; //-> discount code id
+  const sellerId = req.seller?.id;
   try {
     //check discount exist or not
     const discountCode = await prisma.discount_codes.findUnique({
-      where: { id },select:{id:true,sellerId:true}
+      where: { id },
+      select: { id: true, sellerId: true },
     });
     if (!discountCode) {
       return next(new ValidationError("Discount Code Not available"));
     }
-    if(discountCode.sellerId!==sellerId) return next(new ValidationError("You're not authorized to delete this discount code."));
-    await prisma.discount_codes.delete({where:{id}})
+    if (discountCode.sellerId !== sellerId)
+      return next(
+        new ValidationError(
+          "You're not authorized to delete this discount code."
+        )
+      );
+    await prisma.discount_codes.delete({ where: { id } });
     return res
       .status(201)
       .json({ message: "Discount Code Deleted SuccessFully" });
   } catch (error) {
-    return res.status(500).json({message:"Server Error! while deleting discount code."})
+    return res
+      .status(500)
+      .json({ message: "Server Error! while deleting discount code." });
   }
 };

@@ -5,5 +5,5 @@ const router:Router = express.Router()
 router.get("/categories",getProductCategories)
 router.post("/create-discount-code",sellerAuthMiddleware,isSeller,createDiscountCode)
 router.get("/find-discount-codes",sellerAuthMiddleware,isSeller,getDiscountCode)
-router.post("/delete-discount-code",sellerAuthMiddleware,isSeller,deleteDiscountCode)
+router.post("/delete-discount-code/:id",sellerAuthMiddleware,isSeller,deleteDiscountCode)
 export default router
