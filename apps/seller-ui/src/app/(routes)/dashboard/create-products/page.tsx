@@ -53,6 +53,16 @@ const page = () => {
     staleTime: 1000 * 60 * 5, //->cache for 5 min
     retry: 2,
   });
+  //fetch discount codes
+  const { data: discountCodes = [], isLoading: discountCodeLoadig } = useQuery({
+    queryKey: ["shop-discounts"],
+    queryFn: async () => {
+      const res = await axiosInstance.get(
+        "/product/api/v1/find-discount-codes"
+      );
+      return res.data || [];
+    },
+  });
   console.log("categoryData : ", categoryData);
   const categories = categoryData?.categories || [];
   const subCategories = categoryData?.categories.subCategory || {};
@@ -65,30 +75,101 @@ const page = () => {
   console.log("Sub Categories : ", subCategories);
   console.log("Sub Categories Electronics : ", subCategories[selectedCategory]);
   console.log("selectedCategory : ", selectedCategory);
-  const handleImageChange = (file: File | null, index: number) => {
-    const updatedImages = [...images];
-    updatedImages[index] = file;
-    if (index === images.length - 1 && images.length < 8) {
-      updatedImages.push(null);
-    } //1=0,2=1,3=2
-    setImages(updatedImages);
-    setValue("images", updatedImages);
-  };
-  const handleRemoveImage = (index: number) => {
-    setImages((prev) => {
-      let removeImage = [...prev];
-      if (index === -1) {
-        removeImage[0] = null;
-      } else {
-        removeImage.splice(index, 1);
-      }
-      if (!removeImage.includes(null) && removeImage.length < 8) {
-        removeImage.push(null);
-      }
-      return removeImage;
+  const convertFileToBase64 = (file: File) => {
+    return new Promise((res, rej) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => res(reader.result);
+      reader.onerror = (error) => rej(error);
     });
-    setValue("images", images);
   };
+  const handleImageChange = async(file: File | null, index: number) => {
+    if (!file) {
+      return;
+    }
+    try {
+      const base64Image = await convertFileToBase64(file); //yahe se start kerna 11:48
+      console.log("Base64 : ",base64Image)
+      // const res = await axiosInstance.post("/product/api/v1/upload-image",base64Image)
+      // console.log("Res from upload image : ",res.data)
+      //updated images array
+      const updatedImages = [...images];
+      // updatedImages[index] = res.data.file_name;
+      updatedImages[index] = file;
+      if(index === images.length -1 && updatedImages.length < 8){
+        updatedImages.push(null)
+      }
+      setImages(updatedImages);
+      console.log("UpdatedImage In api : ",updatedImages)
+      console.log("SetImages In api : ",images)
+      setValue("images", updatedImages);
+    } catch (error) {
+      console.log("Error while uploading Images : ",error)
+    }
+  };
+  //   const handleRemoveImage = (index: number) => {
+  //   setImages((prev) => {
+  //     let updated = [...prev];
+
+  //     // delete actual image
+  //     updated.splice(index, 1);
+
+  //     // last slot me null hona zaroori hai
+  //     if (!updated.includes(null)) {
+  //       updated.push(null);
+  //     }
+
+  //     // Update form value correctly
+  //     setValue("images", updated);
+
+  //     return updated;
+  //   });
+  // };
+
+  // const handleRemoveImage = (index: number) => {
+  //   setImages((prev) => {
+  //     console.log("PREV : ",prev)
+  //     let removeImage = [...prev];
+  //     let img = [...prev];
+  //     console.log("img :",img)
+  //     if (index === -1) {
+  //       removeImage[0] = null;
+  //     } else {
+  //       removeImage.splice(index, 1);
+  //       console.log("REmoveImage :",removeImage)
+  //       console.log("img :",img)
+  //     }
+  //     if (!removeImage.includes(null) && removeImage.length < 8) {
+  //       removeImage.push(null);
+  //     }
+  //     // setValue("images", removeImage);
+  //     return removeImage;
+  //   });
+  //   setValue("images", images);
+  // };
+  const handleRemoveImage = (index: number) => {
+  setImages((prev) => {
+    console.log("Prev:", prev);
+
+    // 1. Nulls remove karo
+    // const cleaned = prev.filter((item) => item !== null);
+    const cleaned: (File | null)[] = prev.filter((item) => item !== null);
+
+    // 2. Jis index wali image remove karni ho, wo hatao
+    cleaned.splice(index, 1);
+
+    // 3. Always keep one empty slot at end
+    if (cleaned.length < 8) {
+      cleaned.push(null);
+    }
+
+    // 4. Update form correctly
+    setValue("images", cleaned);
+
+    return cleaned;
+  });
+};
+
   const handleSaveDraft = () => {};
   return (
     <form
@@ -500,8 +581,40 @@ const page = () => {
               </div>
               <div className="mt-3">
                 <label htmlFor="" className="font-semibold block">
-                  Discounted Code
+                  Select Discounted Code
                 </label>
+                {/* bilal */}
+                {discountCodeLoadig ? (
+                  <p className="text-gray-300">Loading Dsicount code</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {discountCodes?.discountCodeExist?.map((code: any) => (
+                      <button
+                        type="button"
+                        key={code?.id}
+                        className={`px-3 py-1 rounded-md text-sm font-semibold border ${
+                          watch("discountCode")?.includes(code.id)
+                            ? "bg-blue-600 text-white border-blue-800"
+                            : "bg-gray-800 text-gray-300 border-gray-400 hover:border-gray-700"
+                        }`}
+                        onClick={() => {
+                          const currentSelection = watch("discountCode") || [];
+                          const updatedSelection = currentSelection?.includes(
+                            code.id
+                          )
+                            ? currentSelection.filter(
+                                (id: string) => id !== code.id
+                              )
+                            : [...currentSelection, code.id];
+                          setValue("discountCode", updatedSelection);
+                        }}
+                      >
+                        {code.public_name} ({code.discountValue}
+                        {code.discountType === "percentage" ? "%" : "$"})
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -516,9 +629,14 @@ const page = () => {
           >
             Save Draft
           </button>
-          
         )}
-        <button type="submit" disabled={loading} className="bg-blue-700 text-white rounded-md px-4 py-2">{loading?"Creating....":"Create"}</button>
+        <button
+          type="submit"
+          disabled={loading}
+          className="bg-blue-700 text-white rounded-md px-4 py-2"
+        >
+          {loading ? "Creating...." : "Create"}
+        </button>
       </div>
     </form>
   );

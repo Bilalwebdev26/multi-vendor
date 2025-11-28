@@ -29,7 +29,7 @@ app.use(
 );
 app.use(
   rateLimit({
-    windowMs: 15 * 60 * 1000,
+    windowMs: 1 * 60 * 1000,
     max: (req: any) => (req.user ? 1000 : 100),
     message: (req: any) => (req.user ? "Too many requests, please try again later." : "Too many requests, please try again later."),
     handler: (req: any, res: any) => {
