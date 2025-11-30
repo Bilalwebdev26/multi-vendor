@@ -16,7 +16,11 @@ datasource db {
   provider = "mongodb"
   url = env("DATABASE_URL")
 }
-
+enum ProductStatus{
+  Active
+  Pending 
+  Draft
+}
 // model images {
 //   id       String @id @default(auto()) @map("_id") @db.ObjectId
 //   /// Field referred in an index, but found no data to define the type.
@@ -84,9 +88,11 @@ model images {
   userId   String? @db.ObjectId @unique    // one-to-one avatar for user
   sellerId String? @db.ObjectId @unique    // one-to-one avatar for seller
   shopId   String? @db.ObjectId             // many images per shop (gallery)
+  productId String? @db.ObjectId 
   users   users?   @relation(fields: [userId], references: [id])
   sellers sellers? @relation(fields: [sellerId], references: [id])
   shops   shops?   @relation(fields: [shopId], references: [id])
+  products   products?   @relation(fields: [productId], references: [id])
 }
 
 model users {
@@ -130,6 +136,9 @@ model shops {
   reviews shopReviews[]   // one-to-many reviews
   sellerId String @db.ObjectId @unique
   sellers sellers? @relation(fields: [sellerId], references: [id])
+  // productId String? @db.ObjectId 
+  products products[]
+  // products  products? @relation(fields: [productId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -163,4 +172,38 @@ model discount_codes{
   sellerId  String 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+model products {
+  id                   String @id @default(auto()) @map("_id") @db.ObjectId
+  title                String
+  description          String
+  short_description    String?
+  detailed_description String
+  warranty             String?
+  tags                 String[] @default([])            // array of strings
+  slug                 String @unique
+  brand                String?
+  cash_on_delivery     Boolean             @default(true)
+  categories           String              // or relation if separate Category model
+  subCategory          String              // same as above
+  video_url            String?
+  regular_price        Float
+  sale_price           Float
+  stock                Int
+  colors               String[]            @default([])        // array of colors
+  sizes                String[]            @default([])
+  starting_data        DateTime?
+  ending_data          DateTime?
+  customProperties     Json                @default("{}")      // object
+  custom_specification Json?
+  discountCode         String[] @db.ObjectId       // if multiple codes
+  images               images[]             // relation to images
+  rattings             Float @default(5)
+  status               ProductStatus @default(Active)
+  isDeleted            Boolean @default(false)
+  deletedAt            DateTime?
+  shopId               String @db.ObjectId 
+  shops                shops @relation(fields: [shopId], references: [id])
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
 }

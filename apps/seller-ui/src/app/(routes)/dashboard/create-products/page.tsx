@@ -1,8 +1,11 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
 import ImagePlaceholder from "apps/seller-ui/src/shared/modules/image-placeholder";
+import { enhancemnets } from "apps/seller-ui/src/utils/AiEnhancemnet";
 import { axiosInstance } from "apps/seller-ui/src/utils/axiosInstance";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Wand, X } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { ColorSelector } from "packages/components/color-selector";
 import CustomSelectProperties from "packages/components/custom-select";
 import CustomSpecification from "packages/components/custom-specification";
@@ -13,17 +16,24 @@ import React, { useMemo, useState } from "react";
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import toast from "react-hot-toast";
 
-// type Inputs = {
-//   images: file:File|null;
-//   exampleRequired: string
-// }
+interface UploadFileInterface {
+  fileName: string;
+  file_url: string;
+}
 
 const page = () => {
   //states
   const [openImageModel, setOpenImageModel] = useState(false);
   const [isChanged, setIsChanged] = useState(true);
-  const [images, setImages] = useState<(File | null)[]>([null]);
+  const [images, setImages] = useState<(UploadFileInterface | null)[]>([null]);
+  const [activeEffect, setActiveEffect] = useState<string | null>(null);
+  console.log("Images from Top : ", images);
+  const [pictureloading, setPictureloading] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const [aiImage, setAIImage] = useState<string>("");
+  const router = useRouter()
+  console.log("Ai image : ", aiImage);
   //react hook
   const {
     register,
@@ -33,7 +43,6 @@ const page = () => {
     control,
     formState: { errors },
   } = useForm();
-  const onSubmit = (data: any) => console.log(data);
   //------fetch categories
   const {
     data: categoryData,
@@ -83,28 +92,40 @@ const page = () => {
       reader.onerror = (error) => rej(error);
     });
   };
-  const handleImageChange = async(file: File | null, index: number) => {
+  const handleImageChange = async (file: File | null, index: number) => {
     if (!file) {
       return;
     }
     try {
       const base64Image = await convertFileToBase64(file); //yahe se start kerna 11:48
-      console.log("Base64 : ",base64Image)
-      // const res = await axiosInstance.post("/product/api/v1/upload-image",base64Image)
-      // console.log("Res from upload image : ",res.data)
+      console.log("Base64 : ", base64Image);
+      setPictureloading(true);
+      const res = await axiosInstance.post("/product/api/v1/upload-image", {
+        base64Image,
+      });
+
+      console.log("Res upload image : ", res);
+      console.log("Res from upload image : ", res.data);
       //updated images array
       const updatedImages = [...images];
-      // updatedImages[index] = res.data.file_name;
-      updatedImages[index] = file;
-      if(index === images.length -1 && updatedImages.length < 8){
-        updatedImages.push(null)
+      const uploadedFile: UploadFileInterface = {
+        fileName: res.data.fileName,
+        file_url: res.data.file_url,
+      };
+      updatedImages[index] = uploadedFile;
+      console.log("Updating Images : ", updatedImages);
+      // updatedImages[index] = file;
+      if (index === images.length - 1 && updatedImages.length < 8) {
+        updatedImages.push(null);
       }
       setImages(updatedImages);
-      console.log("UpdatedImage In api : ",updatedImages)
-      console.log("SetImages In api : ",images)
+      console.log("UpdatedImage In api : ", updatedImages);
+      console.log("SetImages In api : ", images);
       setValue("images", updatedImages);
     } catch (error) {
-      console.log("Error while uploading Images : ",error)
+      console.log("Error while uploading Images : ", error);
+    } finally {
+      setPictureloading(false);
     }
   };
   //   const handleRemoveImage = (index: number) => {
@@ -125,52 +146,102 @@ const page = () => {
   //     return updated;
   //   });
   // };
-
-  // const handleRemoveImage = (index: number) => {
-  //   setImages((prev) => {
-  //     console.log("PREV : ",prev)
-  //     let removeImage = [...prev];
-  //     let img = [...prev];
-  //     console.log("img :",img)
-  //     if (index === -1) {
-  //       removeImage[0] = null;
-  //     } else {
-  //       removeImage.splice(index, 1);
-  //       console.log("REmoveImage :",removeImage)
-  //       console.log("img :",img)
-  //     }
-  //     if (!removeImage.includes(null) && removeImage.length < 8) {
-  //       removeImage.push(null);
-  //     }
-  //     // setValue("images", removeImage);
-  //     return removeImage;
-  //   });
-  //   setValue("images", images);
-  // };
-  const handleRemoveImage = (index: number) => {
-  setImages((prev) => {
-    console.log("Prev:", prev);
-
-    // 1. Nulls remove karo
-    // const cleaned = prev.filter((item) => item !== null);
-    const cleaned: (File | null)[] = prev.filter((item) => item !== null);
-
-    // 2. Jis index wali image remove karni ho, wo hatao
-    cleaned.splice(index, 1);
-
-    // 3. Always keep one empty slot at end
-    if (cleaned.length < 8) {
-      cleaned.push(null);
+  const applyTransformation = async (effect: string) => {
+    if (!aiImage || processing) {
+      return;
     }
+    setProcessing(true);
+    setActiveEffect(effect);
+    try {
+      const transformUrl = `${aiImage}?tr=${effect}`;
+      toast.success(transformUrl);
+      console.log("Transofrim Url : ", transformUrl);
+      setAIImage(transformUrl);
+    } catch (error) {
+      console.log("Erorr while enhnaced image : ", error);
+    } finally {
+      setProcessing(false);
+    }
+  };
+  const handleRemoveImage = async (index: number) => {
+    try {
+      const updatedImages = [...images];
+      const imageToDelete = updatedImages[index];
+      if (imageToDelete && typeof imageToDelete === "object") {
+        //delete our selected picture
+        const res = await axiosInstance.post("/product/api/v1/delete-image", {
+          fileId: imageToDelete.fileName!,
+        });
+        console.log("Res upload image : ", res);
+      }
+      updatedImages.splice(index, 1);
+      //add null placeholder
+      if (!updatedImages.includes(null) && updatedImages.length < 8) {
+        updatedImages.push(null);
+      }
+      setImages(updatedImages);
+      setValue("images", updatedImages);
+    } catch (error) {
+      toast.error("Error while deleting Image");
+      console.log("Error while deleting Image : ", error);
+    }
+    // setImages((prev) => {
+    //   console.log("PREV : ",prev)
+    //   let removeImage = [...prev];
+    //   let img = [...prev];
+    //   console.log("img :",img)
+    //   if (index === -1) {
+    //     removeImage[0] = null;
+    //   } else {
+    //     removeImage.splice(index, 1);
+    //     console.log("REmoveImage :",removeImage)
+    //     console.log("img :",img)
+    //   }
+    //   if (!removeImage.includes(null) && removeImage.length < 8) {
+    //     removeImage.push(null);
+    //   }
+    //   // setValue("images", removeImage);
+    //   return removeImage;
+    // });
+    // setValue("images", images);
+  };
+  //   const handleRemoveImage = (index: number) => {
+  //   setImages((prev) => {
+  //     console.log("Prev:", prev);
 
-    // 4. Update form correctly
-    setValue("images", cleaned);
+  //     // 1. Nulls remove karo
+  //     // const cleaned = prev.filter((item) => item !== null);
+  //     const cleaned: (File | null)[] = prev.filter((item) => item !== null);
 
-    return cleaned;
-  });
-};
+  //     // 2. Jis index wali image remove karni ho, wo hatao
+  //     cleaned.splice(index, 1);
+
+  //     // 3. Always keep one empty slot at end
+  //     if (cleaned.length < 8) {
+  //       cleaned.push(null);
+  //     }
+
+  //     // 4. Update form correctly
+  //     setValue("images", cleaned);
+
+  //     return cleaned;
+  //   });
+  // };
 
   const handleSaveDraft = () => {};
+  const onSubmit = async(data: any) => {
+    console.log("Form Data : ", data);
+    try {
+      setLoading(true)
+      const res = await axiosInstance.post("/product/api/v1/create-product",{data})
+      toast.success("Product created successFully")
+      router.push("/dashboard/all-products")
+    } catch (error) {
+      toast.error("Product created failed.")
+    }finally{
+      setLoading(false)
+    }
+  };
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
@@ -196,6 +267,9 @@ const page = () => {
               small={false}
               index={0}
               onImageChange={handleImageChange}
+              pictureloading={pictureloading}
+              images={images}
+              setAIImage={setAIImage}
               onRemove={handleRemoveImage}
             />
           )}
@@ -208,6 +282,9 @@ const page = () => {
                 key={index}
                 index={index + 1}
                 onImageChange={handleImageChange}
+                pictureloading={pictureloading}
+                images={images}
+                setAIImage={setAIImage}
                 onRemove={handleRemoveImage}
               />
             ))}
@@ -356,10 +433,10 @@ const page = () => {
                   defaultValue={"yes"}
                   className="w-full border outline-none border-gray-700 bg-transparent p-1"
                 >
-                  <option value="yes" className="bg-black">
+                  <option value="true" className="bg-black">
                     Yes
                   </option>
-                  <option value="no" className="bg-black">
+                  <option value="false" className="bg-black">
                     No
                   </option>
                 </select>
@@ -620,6 +697,56 @@ const page = () => {
           </div>
         </div>
       </div>
+      {openImageModel && (
+        <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-60 z-50">
+          <div className="bg-gray-800 p-6 rounded-lg w-[450px] text-white">
+            <div className="flex justify-between items-center pb-3 mb-4 ">
+              <h2 className="text-lg font-semibold">Enhanced Product Image</h2>
+              <X
+                size={18}
+                className="cursor-pointer hover:text-white transition"
+                onClick={() => setOpenImageModel(false)}
+              />
+            </div>
+            <div className="w-full h-[250px] overflow-hidden rounded-md  border-2 border-gray-600 relative">
+              <Image
+                src={aiImage}
+                alt="product-image"
+                layout="fill"
+                className="object-contain"
+              />
+            </div>
+            {aiImage && (
+              <div className="mt-4 space-y-2 ">
+                <h3 className="text-white text-sm font-semibold">
+                  AI Enhancements
+                </h3>
+                <span className="text-xs text-gray-400 font-semibold">
+                  Select any 1 For Enhance Image
+                </span>
+                <div className="grid grid-cols-2 gap-2 max-h-[250px] overflow-y-auto">
+                  {enhancemnets.map(({ label, effect }) => (
+                    <button
+                      type="button"
+                      key={effect}
+                      onClick={() => applyTransformation(effect)}
+                      disabled={processing}
+                      className={`p-2 rounded-md flex items-center gap-2 ${
+                        activeEffect === effect
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-700 hover:bg-gray-600"
+                      }`}
+                    >
+                      <Wand size={18} />
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       <div className="mt-6 flex justify-end gap-3">
         {isChanged && (
           <button

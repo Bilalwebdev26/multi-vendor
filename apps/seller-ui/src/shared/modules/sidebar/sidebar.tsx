@@ -77,7 +77,7 @@ const SideBarWrapper = () => {
               <SideBarItems
                 title="Products"
                 icon={<Boxes color={getIconColor("/dashboard/products")}/>}
-                isActive={activeSideBar === "/dashboard/products"}
+                isActive={activeSideBar === "/dashboard/all-products"}
                 href="/dashboard/products"
               />
               <SideBarItems

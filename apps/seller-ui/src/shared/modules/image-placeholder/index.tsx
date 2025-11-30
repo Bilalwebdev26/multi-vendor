@@ -2,6 +2,10 @@
 import { Pencil, WandSparkles, X } from "lucide-react";
 import Image from "next/image";
 import React, { useState } from "react";
+interface UploadFileInterface {
+  fileName: string;
+  file_url: string;
+}
 interface ImagePlaceholderProps {
   size: string;
   small?: boolean;
@@ -9,6 +13,9 @@ interface ImagePlaceholderProps {
   onRemove?: (index: number) => void;
   defaultImage?: string | null;
   index?: any;
+  pictureloading: boolean;
+  images?: any;
+  setAIImage: (e: string) => void;
   setOpenImageModel: (openImageModel: boolean) => void;
 }
 const ImagePlaceholder = ({
@@ -18,9 +25,13 @@ const ImagePlaceholder = ({
   onRemove,
   defaultImage = null,
   index = null,
+  pictureloading,
+  images,
+  setAIImage,
   setOpenImageModel,
 }: ImagePlaceholderProps) => {
   const [imagePreview, setImagePreview] = useState<string | null>(defaultImage);
+  console.log("imagePreview : ", imagePreview);
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -45,14 +56,23 @@ const ImagePlaceholder = ({
         <>
           <button
             type="button"
+            disabled={pictureloading}
             className="absolute top-3 right-3 p-2 !rounded bg-red-600 shadow-lg"
-            onClick={() => onRemove?.(index!)}
+            onClick={() => {
+              onRemove?.(index!);
+              setImagePreview(null); // <-- Yahan preview reset
+            }}
           >
             <X size={16} />
           </button>
           <button
             className="absolute top-3 right-[70px] p-2 !rounded bg-blue-500 shadow-lg cursor-pointer"
-            onClick={() => setOpenImageModel(true)}
+            disabled={pictureloading}
+            type="button"
+            onClick={() => {
+              setOpenImageModel(true);
+              setAIImage(images[index].file_url);
+            }}
           >
             <WandSparkles size={16} />
           </button>
@@ -77,8 +97,20 @@ const ImagePlaceholder = ({
         />
       ) : (
         <>
-          <p className={`text-gray-400 ${small?"text-xl":"text-4xl"} font-Roboto font-semibold`}>{size}</p>
-          <p className={`text-gray-500 ${small?"text-xs":"text-md"} text-center font-Poppins p-2`}>Please chose an image <br /> according to expected ratio</p>
+          <p
+            className={`text-gray-400 ${
+              small ? "text-xl" : "text-4xl"
+            } font-Roboto font-semibold`}
+          >
+            {size}
+          </p>
+          <p
+            className={`text-gray-500 ${
+              small ? "text-xs" : "text-md"
+            } text-center font-Poppins p-2`}
+          >
+            Please chose an image <br /> according to expected ratio
+          </p>
         </>
       )}
     </div>

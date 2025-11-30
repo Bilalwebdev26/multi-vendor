@@ -3,6 +3,7 @@
 import Providers from "../providers";
 import "./global.css";
 import { Poppins, Roboto } from "next/font/google";
+import toast, { Toaster } from 'react-hot-toast';
 
 export const metadata = {
   title: "MULTI-VENDOR Seller Account",
@@ -29,6 +30,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${poppins.variable} ${roboto.variable} min-h-screen bg-slate-900 font-sans antialiased`}>
         <Providers>{children}</Providers>
+        <Toaster />
       </body>
     </html>
   );
