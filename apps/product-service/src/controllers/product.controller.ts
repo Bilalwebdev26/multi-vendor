@@ -279,12 +279,12 @@ export const findShopProducts = async (
       return next(new ValidationError("Only Seller can access product."));
     }
     const products = await prisma.products.findMany({
-      where:{
-        shopId:req.seller?.shop?.id
+      where: {
+        shopId: req.seller?.shop?.id,
       },
-      include:{
-        images:true
-      }
+      include: {
+        images: true,
+      },
     });
     return res.status(201).json({
       success: true,
@@ -294,6 +294,100 @@ export const findShopProducts = async (
   } catch (error: any) {
     return res.status(500).json({
       message: "Server Error! while found products.",
+      error: JSON.parse(JSON.stringify(error)), // ⭐ FULL ERROR
+      stack: error.stack, // ⭐ STACK TRACE
+      meta: error.meta || null, // null if undefined
+      cause: error.cause || null,
+    });
+  }
+};
+export const deleteProduct = async (
+  req: any,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const productId = req.params.id;
+    if (!productId) {
+      return next(new ValidationError("Product id is missing"));
+    }
+    //prisma find query
+    const product = await prisma.products.findUnique({
+      where: { id: productId },
+      select: { id: true, shopId: true, isDeleted: true },
+    });
+    if (!product) {
+      return next(new ValidationError("Product Not Found."));
+    }
+    if (product.shopId !== req.seller?.shop?.id) {
+      return next(new ValidationError("Only store owner delete this product."));
+    }
+    if (product.isDeleted) {
+      return next(new ValidationError("Product is already deleted."));
+    }
+    //prisma update query
+    const products = await prisma.products.update({
+      where: { id: productId },
+      data: {
+        isDeleted: true,
+        deletedAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      },
+    });
+    return res.status(200).json({
+      success: true,
+      message: "Product delted after 1 day",
+      products,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      message: "Server Error! while delete product.",
+      error: JSON.parse(JSON.stringify(error)), // ⭐ FULL ERROR
+      stack: error.stack, // ⭐ STACK TRACE
+      meta: error.meta || null, // null if undefined
+      cause: error.cause || null,
+    });
+  }
+};
+export const restoreProduct = async (
+  req: any,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const productId = req.params.id;
+    if (!productId) {
+      return next(new ValidationError("Product id is missing"));
+    }
+    //prisma find query
+    const product = await prisma.products.findUnique({
+      where: { id: productId },
+      select: { id: true, shopId: true, isDeleted: true },
+    });
+    if (!product) {
+      return next(new ValidationError("Product Not Found."));
+    }
+    if (product.shopId !== req.seller?.shop?.id) {
+      return next(new ValidationError("Only store owner delete this product."));
+    }
+    if (!product.isDeleted) {
+      return next(new ValidationError("Product is already Restored."));
+    }
+    //prisma update query
+    const products = await prisma.products.update({
+      where: { id: productId },
+      data: {
+        isDeleted: false,
+        deletedAt: null,
+      },
+    });
+    return res.status(200).json({
+      success: true,
+      message: "Product Restored SuccessFully",
+      products,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      message: "Server Error! while Restore product.",
       error: JSON.parse(JSON.stringify(error)), // ⭐ FULL ERROR
       stack: error.stack, // ⭐ STACK TRACE
       meta: error.meta || null, // null if undefined

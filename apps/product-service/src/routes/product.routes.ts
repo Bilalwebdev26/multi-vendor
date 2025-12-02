@@ -1,5 +1,5 @@
 import express, { Router } from "express"
-import { createDiscountCode, createProduct, deleteDiscountCode, deleteProductImage, findShopProducts, getDiscountCode, getProductCategories, uploadProductImage } from "../controllers/product.controller.js"
+import { createDiscountCode, createProduct, deleteDiscountCode, deleteProduct, deleteProductImage, findShopProducts, getDiscountCode, getProductCategories, restoreProduct, uploadProductImage } from "../controllers/product.controller.js"
 import { isSeller, sellerAuthMiddleware } from "@packages/middleware/isAuth.middleware.js"
 const router:Router = express.Router()
 router.get("/categories",getProductCategories)
@@ -12,5 +12,7 @@ router.post("/delete-image",sellerAuthMiddleware,isSeller,deleteProductImage)
 //product routes
 router.post("/create-product",sellerAuthMiddleware,isSeller,createProduct)
 router.get("/get-shop-products",sellerAuthMiddleware,isSeller,findShopProducts)
+router.delete("/delete-product/:id",sellerAuthMiddleware,isSeller,deleteProduct)
+router.put("/restore-product/:id",sellerAuthMiddleware,isSeller,restoreProduct)
 
 export default router

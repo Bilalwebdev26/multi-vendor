@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import "./jobs/product.cron.jobs"
 // import rateLimit from "express-rate-limit";
 // import * as path from "path";
 import morgan from "morgan";
