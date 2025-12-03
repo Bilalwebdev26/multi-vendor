@@ -2,7 +2,7 @@
 import Providers from "../providers";
 import Header from "../shared/widgets/header";
 import "./global.css";
-import { Poppins, Roboto } from "next/font/google";
+import { Poppins, Roboto,Oregano } from "next/font/google";
 
 export const metadata = {
   title: "MULTI-VENDOR",
@@ -19,6 +19,11 @@ const poppins = Poppins({
   weight: ["400", "500", "600", "700", "800", "900"], // jo weights chahiye wo add karo
   variable: "--font-poppins",
 });
+const oregano = Oregano({
+  subsets: ["latin"],
+  weight: ["400"], // jo weights chahiye wo add karo
+  variable: "--font-oregano",
+});
 
 export default function RootLayout({
   children,
@@ -27,7 +32,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${poppins.variable} ${roboto.variable}`}>
+      <body className={`${poppins.variable} ${roboto.variable} ${oregano.variable}`}>
         <Providers>
           <Header />
           {children}

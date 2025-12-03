@@ -2,7 +2,7 @@ import { ValidationError } from "@packages/error-handler/index.js";
 import { prisma } from "../../../../lib/prisma.js";
 import { NextFunction, Response, Request } from "express";
 import { imageKit } from "@packages/libs/imageKit/index.js";
-import { sendValidationError } from "../helper/product.helper.js";
+import { Prisma } from "@generated/prisma/client.js";
 
 //get product category
 export const getProductCategories = async (
@@ -394,4 +394,33 @@ export const restoreProduct = async (
       cause: error.cause || null,
     });
   }
+};
+export const getAllProducts = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    //set pagination
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const skip = (page - 1) * limit;
+    const type = req.query.type;
+    const baseFilter = {
+      OR: [
+        {
+          starting_date: null,
+        },
+        {
+          ending_date: null,
+        },
+      ],
+    };
+    const orderBy: Prisma.productsOrderByWithRelationInput =
+      type === "latest"
+        ? { createdAt: "desc" as Prisma.SortOrder }
+        : { totalSales: "desc" as Prisma.SortOrder };
+
+        
+  } catch (error) {}
 };

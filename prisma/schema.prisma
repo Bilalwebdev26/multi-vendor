@@ -202,6 +202,7 @@ model products {
   status               ProductStatus @default(Active)
   isDeleted            Boolean @default(false)
   deletedAt            DateTime?
+  totalSales           Int @default(0)
   shopId               String @db.ObjectId 
   shops                shops @relation(fields: [shopId], references: [id])
   createdAt            DateTime            @default(now())
