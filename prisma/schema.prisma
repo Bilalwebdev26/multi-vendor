@@ -85,8 +85,8 @@ model images {
   file_id String
   url String
   // FK: avatar for user & seller (one-to-one), gallery for shop (one-to-many)
-  userId   String? @db.ObjectId @unique    // one-to-one avatar for user
-  sellerId String? @db.ObjectId @unique    // one-to-one avatar for seller
+  userId   String? @db.ObjectId     // one-to-one avatar for user
+  sellerId String? @db.ObjectId     // one-to-one avatar for seller
   shopId   String? @db.ObjectId             // many images per shop (gallery)
   productId String? @db.ObjectId 
   users   users?   @relation(fields: [userId], references: [id])
@@ -100,7 +100,7 @@ model users {
   name String 
   email String @unique
   following String[]
-  avatar images?        // one-to-one: user's avatar image
+  avatar images[]       // one-to-one: user's avatar image
   password String? 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -152,7 +152,7 @@ model sellers {
   password String
   stripeId String?
   followers String[]
-  avatar images?   // seller avatar (one-to-one)
+  avatar images[]   // seller avatar (one-to-one)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   shop shops?

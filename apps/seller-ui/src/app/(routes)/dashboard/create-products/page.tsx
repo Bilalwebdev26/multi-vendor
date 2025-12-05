@@ -234,10 +234,11 @@ const page = () => {
     try {
       setLoading(true)
       const res = await axiosInstance.post("/product/api/v1/create-product",{data})
+      console.log("Res After onsubmit: ",res)
       toast.success("Product created successFully")
       router.push("/dashboard/all-products")
-    } catch (error) {
-      toast.error("Product created failed.")
+    } catch (error:any) {
+      toast.error("Product created failed.",error)
     }finally{
       setLoading(false)
     }

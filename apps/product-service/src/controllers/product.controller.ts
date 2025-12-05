@@ -3,6 +3,7 @@ import { prisma } from "../../../../lib/prisma.js";
 import { NextFunction, Response, Request } from "express";
 import { imageKit } from "@packages/libs/imageKit/index.js";
 import { Prisma } from "@generated/prisma/client.js";
+import { isSet } from "node:util/types";
 
 //get product category
 export const getProductCategories = async (
@@ -408,19 +409,71 @@ export const getAllProducts = async (
     const type = req.query.type;
     const baseFilter = {
       OR: [
-        {
-          starting_date: null,
-        },
-        {
-          ending_date: null,
-        },
+        { starting_data: { isSet: false } },
+        { ending_data: { isSet: false } },
       ],
     };
+    console.log({
+      page,
+      limit,
+      skip,
+      type,
+      baseFilter,
+    });
     const orderBy: Prisma.productsOrderByWithRelationInput =
       type === "latest"
         ? { createdAt: "desc" as Prisma.SortOrder }
         : { totalSales: "desc" as Prisma.SortOrder };
-
-        
-  } catch (error) {}
+    console.log("In console",
+      await prisma.products.findMany({
+        where: { starting_data: { isSet: false } },
+      })
+    );
+    const [products, total, top10Products] = await Promise.all([
+      prisma.products.findMany({
+        skip,
+        take: limit,
+        include: {
+          images: true,
+          shops: true,
+        },
+        where: baseFilter,
+        orderBy: {
+          totalSales: "desc",
+        },
+      }),
+       prisma.products.count({ where: baseFilter }),
+      prisma.products.findMany({
+        take: 10,
+        where: baseFilter,
+        orderBy,
+      }),
+    ]);
+    // const products = await prisma.products.findMany({
+    //   skip,
+    //   take: limit,
+    //   include: {
+    //     images: true,
+    //     shops: true,
+    //   },
+    //   where: baseFilter,
+    //   orderBy: {
+    //     totalSales: "desc",
+    //   },
+    // });
+    console.log(products);
+    console.log("products : ", products);
+    // console.log("top10Products : ",top10Products)
+    res.status(200).json({
+      success: true,
+      products,
+      top10Products,
+      top10by: type === "latest" ? "latest" : "topSales",
+      total,
+      currentPage: page,
+      totalPage:Math.ceil(total/limit)
+    });
+  } catch (error) {
+    next(error);
+  }
 };
