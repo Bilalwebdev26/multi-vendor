@@ -202,6 +202,7 @@ const ProductDetail = ({
                 onClick={() => router.push("/")}
               >
                 <Info size={18}/>
+                
                 More Details
               </button>
             </div>
