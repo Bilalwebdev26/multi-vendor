@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Rating from "../Ratings";
 import { Eye, Heart, ShoppingBag } from "lucide-react";
 import ProductDetail from "../ProductDetail";
+import { useStore } from "apps/user-ui/src/store";
 
 const ProductCard = ({
   product,
@@ -14,6 +15,17 @@ const ProductCard = ({
 }) => {
   const [timeLeft, setTimeLeft] = useState("");
   const [open, setOpen] = useState(false);
+  //zustand state
+  const addToCart = useStore((state: any) => state.addToCart);
+  const addProductWishlist = useStore((state: any) => state.addToWishlist);
+  const removeFromCart = useStore((state: any) => state.removeFromCart);
+  const removeProductWishlist = useStore(
+    (state: any) => state.removeFromWishlist
+  );
+  const wishlist = useStore((state: any) => state.wishlist);
+  const cart = useStore((state: any) => state.cart);
+  const isInCart = cart.some((item: any) => item.id === product.id);
+  const isWishlist = wishlist.some((item: any) => item.id === product.id);
   useEffect(() => {
     if (isEvent && product?.ending_data) {
       //Live date nikalo
@@ -29,9 +41,9 @@ const ProductCard = ({
         const days = Math.floor(diff / (24 * 60 * 60 * 1000));
         const hours = Math.floor((diff / (60 * 60 * 1000)) % 24);
         const minutes = Math.floor((diff / (60 * 1000)) % 60);
-        setTimeLeft(`${days}d ${hours}h ${minutes}m left with this price`)
-      },60000);
-      return ()=>clearInterval(interval)
+        setTimeLeft(`${days}d ${hours}h ${minutes}m left with this price`);
+      }, 60000);
+      return () => clearInterval(interval);
     }
   }, []);
   return (
@@ -93,20 +105,38 @@ const ProductCard = ({
       )}
       <div className="absolute z-10 flex flex-col gap-3 right-3 top-5">
         <div className="bg-white rounded-full p-[6px] shadow-md">
-          <Heart size={22} fill="red" stroke="red" className="cursor-pointer hover:scale-110 transition"/>
+          <Heart
+            size={22}
+            fill={isWishlist?"red":"#4B5563"}
+            stroke={isWishlist?"red":"transparent"}
+            className="cursor-pointer hover:scale-110 transition"
+            onClick={() =>
+              isWishlist
+                ? removeProductWishlist(product.id, user, location, deviceInfo)
+                : addProductWishlist(
+                    { ...product, quantity: 1 },
+                    user,
+                    location,
+                    deviceInfo
+                  )
+            }
+          />
         </div>
         <div className="bg-white rounded-full p-[6px] shadow-md">
-          <Eye size={22} className="cursor-pointer hover:scale-110 transition" onClick={()=>setOpen(!open)}/>
+          <Eye
+            size={22}
+            className="cursor-pointer hover:scale-110 transition"
+            onClick={() => setOpen(!open)}
+          />
         </div>
         <div className="bg-white rounded-full p-[6px] shadow-md">
-          <ShoppingBag size={22} className="cursor-pointer hover:scale-110 transition"/>
+          <ShoppingBag
+            size={22}
+            className="cursor-pointer hover:scale-110 transition"
+          />
         </div>
       </div>
-      {
-        open && (
-          <ProductDetail data={product} setOpen={setOpen}/>
-        )
-      }
+      {open && <ProductDetail data={product} setOpen={setOpen} />}
     </div>
   );
 };
