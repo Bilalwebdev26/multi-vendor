@@ -5,6 +5,9 @@ import Rating from "../Ratings";
 import { Eye, Heart, ShoppingBag } from "lucide-react";
 import ProductDetail from "../ProductDetail";
 import { useStore } from "apps/user-ui/src/store";
+import { useLocationTrack } from "apps/user-ui/src/hooks/useLocationTracking";
+import { useUser } from "apps/user-ui/src/hooks/useUser";
+import { useDeviceTracking } from "apps/user-ui/src/hooks/useDeviceInfo";
 
 const ProductCard = ({
   product,
@@ -26,6 +29,9 @@ const ProductCard = ({
   const cart = useStore((state: any) => state.cart);
   const isInCart = cart.some((item: any) => item.id === product.id);
   const isWishlist = wishlist.some((item: any) => item.id === product.id);
+  const location = useLocationTrack()
+  const user = useUser()
+  const deviceInfo = useDeviceTracking()
   useEffect(() => {
     if (isEvent && product?.ending_data) {
       //Live date nikalo
@@ -133,6 +139,7 @@ const ProductCard = ({
           <ShoppingBag
             size={22}
             className="cursor-pointer hover:scale-110 transition"
+            onClick={()=>!isInCart &&(addToCart({...product,quantity:1},user,location,deviceInfo))}
           />
         </div>
       </div>

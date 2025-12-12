@@ -5,9 +5,13 @@ import { HeartIcon, Search, ShoppingCart } from "lucide-react";
 import ProfileIcon from "apps/user-ui/src/assets/Profile-icon";
 import HeaderBottom from "./HeaderBottom";
 import { useUser } from "apps/user-ui/src/hooks/useUser";
+import { useStore } from "apps/user-ui/src/store";
 
 const Header = () => {
   const { user, isLoading } = useUser();
+const cart = useStore((state: any) => state.cart);
+const wishlist = useStore((state: any) => state.wishlist);
+console.log("cart from header :  ",cart)
   return (
     <div className="w-full bg-white">
       <div className="w-[90%] py-5 mx-auto flex items-center justify-between">
@@ -69,7 +73,7 @@ const Header = () => {
               <HeartIcon />
               <div className="w-5 h-5 border-none  bg-red-500 rounded-full flex items-center justify-center absolute top-[-4px] right-[-12px]">
                 <span className="text-white font-semibold text-[12px] leading-none">
-                  0
+                  {wishlist?.length||0}
                 </span>
               </div>
             </Link>
@@ -77,7 +81,7 @@ const Header = () => {
               <ShoppingCart />
               <div className="w-5 h-5 border-none  bg-red-500 rounded-full flex items-center justify-center absolute top-[-4px] right-[-10px]">
                 <span className="text-white font-semibold text-[12px] leading-none">
-                  0
+                 {cart.length ||0}
                 </span>
               </div>
             </Link>

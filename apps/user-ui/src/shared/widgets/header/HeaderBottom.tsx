@@ -55,12 +55,15 @@
 import ProfileIcon from "apps/user-ui/src/assets/Profile-icon";
 import { navItems } from "apps/user-ui/src/configs/constants";
 import { useUser } from "apps/user-ui/src/hooks/useUser";
+import { useStore } from "apps/user-ui/src/store";
 import { AlignLeft, ChevronDown, HeartIcon, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 
 const HeaderBottom = () => {
-    const { user, isLoading } = useUser();
+  const { user, isLoading } = useUser();
+  const cart = useStore((state: any) => state.cart);
+  const wishlist = useStore((state: any) => state.wishlist);
   const [show, setShow] = useState(false);
   const [sticky, setSticky] = useState(false);
 
@@ -208,7 +211,7 @@ const HeaderBottom = () => {
                   <HeartIcon />
                   <div className="w-5 h-5 border-none  bg-red-500 rounded-full flex items-center justify-center absolute top-[-4px] right-[-12px]">
                     <span className="text-white font-semibold text-[12px] leading-none">
-                      0
+                      {wishlist?.length||0}
                     </span>
                   </div>
                 </Link>
@@ -216,7 +219,8 @@ const HeaderBottom = () => {
                   <ShoppingCart />
                   <div className="w-5 h-5 border-none  bg-red-500 rounded-full flex items-center justify-center absolute top-[-4px] right-[-10px]">
                     <span className="text-white font-semibold text-[12px] leading-none">
-                      0
+                      {cart?.length||0}
+                      
                     </span>
                   </div>
                 </Link>

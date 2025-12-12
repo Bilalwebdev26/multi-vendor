@@ -12,6 +12,10 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useStore } from "apps/user-ui/src/store";
+import { useLocationTrack } from "apps/user-ui/src/hooks/useLocationTracking";
+import { useDeviceTracking } from "apps/user-ui/src/hooks/useDeviceInfo";
+import { useUser } from "apps/user-ui/src/hooks/useUser";
 
 const ProductDetail = ({
   data,
@@ -25,6 +29,16 @@ const ProductDetail = ({
   const [isSelectedSize, setIsSelectedSize] = useState("");
   const [quantity, setQuantity] = useState(1);
   const router = useRouter();
+  const cart = useStore((state: any) => state.cart);
+  const wishlist = useStore((state: any) => state.wishlist);
+  const location = useLocationTrack();
+  const deviceInfo = useDeviceTracking();
+  const user = useUser();
+  const isInCart = cart.some((item: any) => item.id === data.id);
+  const isInWishlist = wishlist.some((item: any) => item.id === data.id);
+  const addToCart = useStore((state: any) => state.addToCart);
+  const addToWishlist = useStore((state: any) => state.addToWishlist);
+  const removeFromWishlist = useStore((state: any) => state.removeFromWishlist);
   return (
     <div
       onClick={() => setOpen(false)}
@@ -32,7 +46,7 @@ const ProductDetail = ({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-[90%] md:w-[80%] md:mt-14 2xl:mt-0 h-max overflow-scroll min-h-[70vh] p-4 md:p-6 bg-white shadow-md rounded-lg"
+        className="w-[90%] md:w-[80%] md:mt-14 2xl:mt-0 h-max overflow-scroll min-h-[70vh] p-4 md:p-6 bg-white shadow-md rounded-lg z-200"
       >
         <div className="w-full flex flex-col md:flex-row">
           <div className="w-full md:w-1/2 h-full">
@@ -189,20 +203,51 @@ const ProductDetail = ({
             {/*  */}
             <div className="flex items-center justify-center gap-3">
               <button
-                className={`flex items-center gap-2 px-4 py-2 bg-[#ff5722] hover:bg-[#e64a19] text-white font-medium rounded-lg transition`}
+                disabled={isInCart}
+                onClick={() =>
+                  addToCart(
+                    {
+                      ...data,
+                      quantity: 1,
+                      selectedOptions: {
+                        color: isSelected,
+                        size: isSelectedSize,
+                      },
+                    },
+                    user,
+                    location,
+                    deviceInfo
+                  )
+                }
+                className={`flex items-center gap-2 px-4 py-2 bg-[#ff5722] hover:bg-[#e64a19] text-white font-medium rounded-lg transition ${
+                  isInCart ? "cursor-not-allowed" : "cursor-pointer"
+                }`}
               >
                 <ShoppingCartIcon size={18} />
                 <span>Add to Cart</span>
               </button>
               <button className={`opacity-[.7] cursor-pointer`}>
-                <Heart size={28} fill="red" color="black" />
+                <Heart
+                  size={28}
+                  fill={isInWishlist ? "red" : "transparent"}
+                  color="black"
+                  onClick={() =>
+                    isInWishlist
+                      ? removeFromWishlist(data.id, user, location, deviceInfo)
+                      : addToWishlist(
+                          { ...data, quantity: 1 },
+                          user,
+                          location,
+                          deviceInfo
+                        )
+                  }
+                />
               </button>
               <button
                 className="bg-emerald-400 px-4 py-2 hover:bg-emerald-600 transition-all text-white font-medium rounded-lg flex items-center justify-center gap-2"
                 onClick={() => router.push("/")}
               >
-                <Info size={18}/>
-                
+                <Info size={18} />
                 More Details
               </button>
             </div>
