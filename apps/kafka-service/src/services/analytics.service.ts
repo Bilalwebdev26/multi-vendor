@@ -70,6 +70,16 @@ export const updateUserAnalytics = async (event: any) => {
       },
     });
     //also updated product annalytics
-    
+    await updateProductAnalytics(event)
   } catch (error) {}
 };
+export const updateProductAnalytics = async(event:any)=>{
+    try {
+        if(!event.productId) return 
+        //define update field dynamically
+        const updatefields:any={}
+        if(event.action==="product_view") updatefields.views = {increment:1}
+    } catch (error) {
+        
+    }
+}
