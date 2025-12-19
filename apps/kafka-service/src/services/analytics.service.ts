@@ -1,5 +1,4 @@
 import { prisma } from "@lib/prisma";
-import { create } from "domain";
 
 export const updateUserAnalytics = async (event: any) => {
   try {
@@ -59,13 +58,13 @@ export const updateUserAnalytics = async (event: any) => {
       where: { userId: event.userId },
       update: {
         lastVisted: new Date(),
-        action: updatedAction,
+        actions: updatedAction,
         ...extraFields,
       },
       create: {
         userId: event?.userId,
         lastVisted: new Date(),
-        action: updatedAction,
+        actions: updatedAction,
         ...extraFields,
       },
     });
